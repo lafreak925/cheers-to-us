@@ -23,9 +23,11 @@ function polyMask(points) {
 function ImgSphere(props) {
   const images = props.images || [];
   const size = Number(props.size) || 560;
-  const radius = Number(props.radius) || size * 0.36;
+  const radius = Number(props.radius) || size * 0.44;
   const rows = Number(props.rows) || 12;
-  const cols = Number(props.cols) || 17;
+  // 360/cols at the equator should match the 180/rows band height, or the cells
+  // come out letterboxed and the photos read as strips rather than tiles.
+  const cols = Number(props.cols) || 24;
   const minRing = Number(props.minRing) || 7;
   const autoRotate = props.autoRotate !== false;
   const autoSpeed = props.autoRotateSpeed != null ? Number(props.autoRotateSpeed) : 0.16;
@@ -38,7 +40,6 @@ function ImgSphere(props) {
   const rot = useRef({ x: -12, y: 20 });
   const vel = useRef({ x: 0, y: 0 });
   const drag = useRef(null);
-  const hover = useRef(false);
   const zoom = useRef(1);
   const moved = useRef(0);
   const tick = useRef(0);
@@ -63,7 +64,7 @@ function ImgSphere(props) {
   const pts = useMemo(() => {
     const R = radius;
     const dLatDeg = 180 / rows;
-    const frame = 0;                  // px of white border around each photo (0 = edge to edge)
+    const frame = 1;                  // px of white border around each photo
     // Facets are separate elements, so where two of them abut, their antialiased
     // edges each land on the same pixel at partial coverage and the background
     // shows through as a hairline — worst where a seam is near edge-on and its
@@ -130,7 +131,10 @@ function ImgSphere(props) {
         - bleed / Math.max(1e-6, R * cosL);
       const clip = polyMask(box(shape));
       const clipIn = polyMask(box(cell(dPhi, dTheta)));
-      const spin = (r % 2) * (180 / ring);   // stagger alternate rows, brick-style
+      // Rows are NOT staggered: where neighbouring bands carry the same ring
+      // count the cell edges line up, and the grid reads as one lattice wrapping
+      // the sphere rather than as brickwork.
+      const spin = 0;
 
       for (let c = 0; c < ring; c++) {
         const lonDeg = spin + (c * 360) / ring;
@@ -156,7 +160,8 @@ function ImgSphere(props) {
         v.x *= 0.94; v.y *= 0.94;
         if (Math.abs(v.x) < 0.004) v.x = 0;
         if (Math.abs(v.y) < 0.004) v.y = 0;
-        if (autoRotate && !hover.current) r.y += autoSpeed;
+        // Keeps turning under the cursor — only an actual drag takes it over.
+        if (autoRotate) r.y += autoSpeed;
       }
       r.x = Math.max(-70, Math.min(70, r.x));
       if (innerRef.current) {
@@ -261,8 +266,7 @@ function ImgSphere(props) {
     ref: hostRef,
     onMouseDown: down,
     onTouchStart: down,
-    onMouseEnter: () => { hover.current = true; },
-    onMouseLeave: () => { hover.current = false; drag.current = null; },
+    onMouseLeave: () => { drag.current = null; },
     style: {
       position: 'relative', width: size + 'px', height: size + 'px',
       perspective: size * 2.4 + 'px', cursor: 'grab', userSelect: 'none',

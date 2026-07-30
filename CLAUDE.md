@@ -31,8 +31,14 @@ none of them are obvious from reading the code:
 - **Globe seams.** Restyle the backdrop to a colour no photo contains
   (`#00ff00`), screenshot across ~10 drag rotations including both poles, and
   count green pixels inside 90% of the disc radius. Any hole in the shell shows
-  up as green. Current baseline: **~0.002%**, worst single frame ~0.01%. If a
-  change pushes that into tenths of a percent, the geometry regressed.
+  up as green. Current baseline on the 12×24 grid: **0.000%** across 16 frames.
+  If a change pushes that into tenths of a percent, the geometry regressed.
+  Two traps when scripting this against Chrome over CDP: `Page.captureScreenshot`'s
+  `clip` is in **page** coordinates while `getBoundingClientRect` is
+  viewport-relative — mixing them silently shifts the measurement window by
+  `scrollY` and reports double-digit percentages that aren't real. And `Input`
+  events *are* viewport-relative, so the globe has to be scrolled on-screen or
+  every synthetic drag misses and each frame comes back identical.
 - **Overflow.** `document.documentElement.scrollWidth === window.innerWidth` at
   390 / 768 / 1280.
 - **Keyboard.** Tab to a featured card, Enter opens the modal; Space on Next
@@ -104,8 +110,12 @@ straight, the latitude edges come out curved, and drawing those latitude edges a
 straight chords is what used to leave a wedge-shaped gap at every corner and a
 torn pinwheel at each pole.
 
-Grid: `rows` 12 × `cols` 17, ring counts scaled by `cos(lat)` with a `minRing`
-floor of 7, radius `size * 0.36`.
+Grid: `rows` 12 × `cols` 24, ring counts scaled by `cos(lat)` with a `minRing`
+floor of 7, radius `size * 0.44`. `cols` is twice `rows` on purpose: the bands
+are `180 / rows` tall and the equatorial cells `360 / cols` wide, so the two
+match and the cells come out square. Change one without the other and the photos
+render as letterboxed strips. Rows are not staggered, so cell edges line up
+across bands that share a ring count and the grid reads as one lattice.
 
 Consequences worth keeping in mind:
 
@@ -115,8 +125,8 @@ Consequences worth keeping in mind:
   inside a CSS 3D scene is a hard 1-bit cut with visible stair-steps; masks
   composite through alpha and antialias. Fill them white — `mask-mode` defaults
   to reading alpha, but a luminance reading of black would hide every facet.
-- `frame` is the white border around each photo and is now `0` — photos meet
-  edge to edge. `bleed` (3px) is independent of it: two abutting antialiased
+- `frame` is the white border around each photo and is `1` — a hairline grid
+  rather than a mount. `bleed` (3px) is independent of it: two abutting antialiased
   edges each land on the same pixel at partial coverage and let the background
   through as a hairline, so every facet is grown past its cell. With no border
   that overlap lands on the neighbour's photo, costing a couple of pixels of

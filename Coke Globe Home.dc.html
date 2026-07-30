@@ -51,7 +51,7 @@ img{max-width:100%}
 <div style="border:1.5px solid rgba(255,255,255,.7);border-radius:100px;padding:9px 20px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.12em;font-size:12px;text-transform:uppercase;cursor:pointer" style-hover="background:#fff;color:#c8102e;border-color:#fff">Share a Coke</div>
 </header>
 
-<section id="globe" style="position:relative;z-index:4;display:grid;align-items:center;gap:20px;padding:8px 40px 0;min-height:780px;grid-template-columns:{{ heroCols }}">
+<section id="globe" style="position:relative;z-index:4;display:grid;align-items:center;gap:20px;padding:8px 40px 0;min-height:830px;grid-template-columns:{{ heroCols }}">
 
 <div id="regions" style="flex-direction:column;gap:10px;animation:rise .6s ease-out both;display:flex">
 <div style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.18em;font-size:11px;text-transform:uppercase;opacity:.6;margin-bottom:4px">Filter by region</div>
@@ -139,7 +139,7 @@ img{max-width:100%}
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;sphereSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:820,&quot;min&quot;:560,&quot;max&quot;:1000,&quot;step&quot;:20,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;autoRotate&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;sphereSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:900,&quot;min&quot;:560,&quot;max&quot;:1100,&quot;step&quot;:20,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;autoRotate&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
 const BASE = [
   ["p1", "Late night, first sip", "Asia", "The bar was packed. We found one table and stayed till close."],
   ["p2", "Birthday countdown", "Asia", "Nine of us, one bottle, and a very loud happy birthday."],
@@ -295,11 +295,11 @@ class Component extends DCLogic {
       // Fit the globe to whichever runs out first, the stage or the viewport
       // height — there is no floor, so it stays on-screen down to a phone.
       sphereSize: Math.round(Math.max(240, Math.min(
-        this.props.sphereSize ?? 820,
+        this.props.sphereSize ?? 900,
         // The rails are minmax(0,210px), so they give way before the globe does;
         // this only has to reserve the padding and gaps around them.
         (wide ? vw - 560 : vw - 32),
-        vh * 0.84
+        vh * 0.88
       ))),
       autoRotate: this.props.autoRotate !== false,
       regions,
