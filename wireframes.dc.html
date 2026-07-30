@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23fff'/%3E%3Ctext x='16' y='23' font-family='Helvetica,Arial' font-size='20' font-weight='bold' text-anchor='middle' fill='%23c8102e'%3EC%3C/text%3E%3C/svg%3E"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@600;700&display=swap" rel="stylesheet"><style>
+body{margin:0;background:#f0eee9;font-family:system-ui,sans-serif}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5)}
+a{color:#2a78d6}a:hover{color:#1a4f8f}
+.wf{font-family:'Architects Daughter',system-ui,sans-serif;color:#1a1a1a}
+.hand{font-family:'Caveat',cursive}
+.box{border:1.5px solid #1a1a1a;background:repeating-linear-gradient(135deg,rgba(0,0,0,.05) 0 3px,transparent 3px 7px);display:flex;align-items:center;justify-content:center;text-align:center}
+.note{font-family:'Caveat',cursive;font-size:15px;color:#c8102e;line-height:1.15}
+.pin{font-family:'Caveat',cursive;font-weight:700;font-size:13px;width:20px;height:20px;border-radius:50%;background:#c8102e;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.txt{background:#1a1a1a;height:8px;border-radius:2px;opacity:.18}
+.btn{border:1.5px solid #1a1a1a;border-radius:20px;padding:8px 18px;font-family:'Architects Daughter',system-ui;font-size:13px}
+.chip{border:1.5px solid #1a1a1a;border-radius:14px;padding:4px 11px;font-family:'Architects Daughter',system-ui;font-size:12px}
+.globe{border-radius:50%;border:2px solid #1a1a1a;overflow:hidden;display:grid;position:relative;background:#fff}
+.globe > i{border:.5px solid rgba(0,0,0,.35);background:repeating-linear-gradient(135deg,rgba(0,0,0,.09) 0 2px,transparent 2px 5px)}
+</style></helmet>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Home page — interactive globe, desktop (3 structures)</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Full-bleed globe stage — globe is the page; stories dock at the bottom</div>
+<div class="dv-card wf" style="width:1000px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1.5px solid #1a1a1a">
+<div style="display:flex;align-items:center;gap:10px"><div class="box" style="width:34px;height:34px;border-radius:50%;font-size:9px">logo</div><span style="font-size:13px">Cheers To Us</span></div>
+<div style="display:flex;gap:18px;font-size:13px"><span>Stories</span><span>The Globe</span><span>Regions</span><span>About</span></div>
+<div class="btn">Share a Coke</div>
+</div>
+
+<div style="position:relative;padding:26px 22px 0;background:repeating-linear-gradient(135deg,rgba(200,16,46,.05) 0 4px,transparent 4px 10px)">
+<div style="text-align:center">
+<div style="font-size:40px;letter-spacing:1px">CHEERS TO US</div>
+<div style="font-size:15px;opacity:.6;margin-top:2px">Celebrate it with a Coke.</div>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:center;gap:26px;margin-top:14px">
+<div style="display:flex;flex-direction:column;gap:8px;width:150px">
+<div style="font-size:11px;opacity:.55">FILTER BY REGION</div>
+<div class="chip">All moments</div><div class="chip">Asia</div><div class="chip">Africa</div><div class="chip">Europe</div><div class="chip">Americas</div>
+<div style="display:flex;gap:6px;align-items:flex-start;margin-top:8px"><span class="pin">3</span><span class="note">picking a region spins + zooms the globe to it</span></div>
+</div>
+
+<div style="position:relative;flex:none">
+<div class="globe" style="width:340px;height:340px;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(7,1fr)"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:'Caveat',cursive;font-size:17px;color:#c8102e;text-align:center;pointer-events:none">3D photo-tile globe<br><span style="font-size:13px">(each tile = a real moment)</span></div>
+<div style="position:absolute;right:-8px;top:16px;width:64px;height:38px;border:1.5px solid #1a1a1a;border-radius:6px;background:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;transform:rotate(-3deg)">hover:<br>tile pops</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;width:150px">
+<div style="display:flex;gap:6px;align-items:flex-start"><span class="pin">1</span><span class="note">drag anywhere to rotate; idle = slow auto-spin</span></div>
+<div style="display:flex;gap:6px;align-items:flex-start"><span class="pin">2</span><span class="note">click a tile → story modal opens over the globe</span></div>
+<div style="display:flex;gap:6px;align-items:flex-start"><span class="pin">4</span><span class="note">scroll = zoom in / out</span></div>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;font-size:12px;opacity:.55"><span>◀ drag</span><span>·</span><span>1,204 moments and counting</span><span>·</span><span>drag ▶</span></div>
+
+<div style="margin-top:16px;border-top:1.5px dashed #1a1a1a;padding:14px 0 20px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font-size:14px">FEATURED MOMENTS</span><span style="font-size:12px;opacity:.5">see all →</span></div>
+<div style="display:flex;gap:12px">
+<div class="box" style="flex:1;height:96px;border-radius:6px;font-size:11px">story card<br>OLD</div>
+<div class="box" style="flex:1;height:96px;border-radius:6px;font-size:11px">story card<br>FRIENDS</div>
+<div class="box" style="flex:1;height:96px;border-radius:6px;font-size:11px">story card<br>NEW</div>
+<div class="box" style="flex:1;height:96px;border-radius:6px;font-size:11px">story card<br>MEMORIES</div>
+</div>
+</div>
+</div>
+
+<div style="padding:16px 22px;border-top:1.5px solid #1a1a1a;display:flex;justify-content:space-between;font-size:12px;opacity:.6"><span>Real Magic.</span><span>#ShareACoke</span></div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Split stage — copy left, globe right; clicking a tile slides a story drawer in</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div class="dv-card wf" style="width:1000px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1.5px solid #1a1a1a">
+<div class="box" style="width:34px;height:34px;border-radius:50%;font-size:9px">logo</div>
+<div style="display:flex;gap:18px;font-size:13px"><span>Stories</span><span>Regions</span><span>The Campaign</span></div>
+<div class="btn">Scan a can</div>
+</div>
+<div style="display:flex;min-height:400px">
+<div style="width:44%;padding:34px 26px;display:flex;flex-direction:column;gap:14px;justify-content:center">
+<div style="font-size:15px;letter-spacing:2px;opacity:.55">REAL PEOPLE. REAL MOMENTS.</div>
+<div style="font-size:44px;line-height:1;">CHEERS<br>TO US</div>
+<div style="display:flex;flex-direction:column;gap:6px;max-width:300px"><div class="txt" style="width:100%"></div><div class="txt" style="width:92%"></div><div class="txt" style="width:70%"></div></div>
+<div style="display:flex;gap:10px;margin-top:6px"><div class="btn" style="background:#c8102e;color:#fff;border-color:#c8102e">Explore the globe</div><div class="btn">Watch the film</div></div>
+<div style="display:flex;gap:6px;align-items:flex-start;margin-top:10px"><span class="pin">1</span><span class="note">copy holds still — all motion lives on the right half</span></div>
+</div>
+<div style="width:56%;border-left:1.5px dashed #1a1a1a;position:relative;background:repeating-linear-gradient(135deg,rgba(0,0,0,.04) 0 4px,transparent 4px 10px);display:flex;align-items:center;justify-content:center;overflow:hidden">
+<div class="globe" style="width:330px;height:330px;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);margin-right:-70px"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div style="position:absolute;left:16px;bottom:16px;display:flex;gap:6px;align-items:flex-start;max-width:230px"><span class="pin">2</span><span class="note">globe bleeds off the right edge; drag to rotate, wheel to zoom</span></div>
+<div style="position:absolute;right:14px;top:14px" class="chip">◑ auto-spin: on</div>
+</div>
+</div>
+</div>
+
+<div class="dv-card wf" style="width:1000px">
+<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1.5px dashed #1a1a1a;font-size:12px;opacity:.6"><span class="pin">3</span>state: a tile was clicked</div>
+<div style="display:flex;min-height:300px">
+<div style="width:52%;position:relative;background:repeating-linear-gradient(135deg,rgba(0,0,0,.04) 0 4px,transparent 4px 10px);display:flex;align-items:center;justify-content:center">
+<div class="globe" style="width:210px;height:210px;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);opacity:.5"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<span class="note" style="position:absolute;bottom:12px;left:16px">globe dims + pauses behind</span>
+</div>
+<div style="width:48%;border-left:1.5px solid #1a1a1a;padding:20px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;font-size:12px;opacity:.55"><span>MOMENT 214 · MUMBAI</span><span>✕</span></div>
+<div class="box" style="height:130px;border-radius:6px;font-size:11px">story video / photo<br>▶</div>
+<div style="font-size:20px">"Share a Coke. Share a story."</div>
+<div style="display:flex;flex-direction:column;gap:6px"><div class="txt" style="width:100%"></div><div class="txt" style="width:88%"></div><div class="txt" style="width:64%"></div></div>
+<div style="display:flex;gap:8px;margin-top:auto"><div class="chip">◀ prev</div><div class="chip">next ▶</div><div class="chip">share</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Zoom-scene — region tabs above the globe, story grid fills below as you filter</div>
+<div class="dv-card wf" style="width:1000px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1.5px solid #1a1a1a">
+<div style="display:flex;align-items:center;gap:10px"><div class="box" style="width:34px;height:34px;border-radius:50%;font-size:9px">logo</div><span style="font-size:13px">Real People. Real Moments.</span></div>
+<div style="display:flex;gap:18px;font-size:13px"><span>Globe</span><span>Stories</span><span>About</span><span>Press</span></div>
+</div>
+
+<div style="display:flex;justify-content:center;gap:10px;padding:14px 0;border-bottom:1.5px dashed #1a1a1a">
+<div class="chip" style="background:#c8102e;color:#fff;border-color:#c8102e">World</div><div class="chip">Asia</div><div class="chip">Africa</div><div class="chip">Europe</div><div class="chip">Americas</div><div class="chip">Oceania</div>
+</div>
+
+<div style="position:relative;display:flex;align-items:center;justify-content:center;padding:24px 0 8px">
+<div class="globe" style="width:280px;height:280px;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr)"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div style="position:absolute;left:26px;top:30px;display:flex;gap:6px;align-items:flex-start;max-width:200px"><span class="pin">1</span><span class="note">smaller globe — it is a navigator, not a poster</span></div>
+<div style="position:absolute;right:26px;top:30px;display:flex;gap:6px;align-items:flex-start;max-width:200px"><span class="pin">2</span><span class="note">tab or click a tile → grid below refilters, globe eases to that region</span></div>
+<div style="position:absolute;left:50%;bottom:-4px;transform:translateX(-50%)" class="chip">drag to rotate · scroll to zoom</div>
+</div>
+
+<div style="padding:22px;border-top:1.5px dashed #1a1a1a;margin-top:14px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font-size:16px">1,204 MOMENTS · SHOWING WORLD</span><span style="font-size:12px;opacity:.5">sort: newest ▾</span></div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+<div class="box" style="height:110px;border-radius:6px;font-size:11px">moment</div><div class="box" style="height:110px;border-radius:6px;font-size:11px">moment</div><div class="box" style="height:110px;border-radius:6px;font-size:11px">moment</div><div class="box" style="height:110px;border-radius:6px;font-size:11px">moment</div>
+<div class="box" style="height:110px;border-radius:6px;font-size:11px">moment</div><div class="box" style="height:110px;border-radius:6px;font-size:11px">moment</div><div class="box" style="height:110px;border-radius:6px;font-size:11px">moment</div><div class="box" style="height:110px;border-radius:6px;font-size:11px">moment</div>
+</div>
+<div style="display:flex;justify-content:center;margin-top:16px"><div class="btn">Load more moments</div></div>
+</div>
+
+<div style="padding:16px 22px;border-top:1.5px solid #1a1a1a;display:flex;justify-content:space-between;font-size:12px;opacity:.6"><span>Bringing hearts together, one Coke at a time.</span><span>#ShareACoke</span></div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "build out <a class="dv-oid" href="#1a">1a</a> as a working globe prototype" · "show me <a class="dv-oid" href="#1b">1b</a>'s story drawer on mobile" · "new directions for the globe interaction"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}"></script>
+</body>
+</html>
