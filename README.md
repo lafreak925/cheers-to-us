@@ -26,5 +26,7 @@ onto the facet's own plane, so the longitude edges are straight and the latitude
 edges are curved. Cells tile the sphere, so the facets tile the silhouette with
 no gaps — including at the poles, where the bands taper to a shared apex. The
 shapes are SVG alpha masks rather than `clip-path`, because a clip inside a CSS
-3D scene is a hard, unantialiased cut; facets also overlap by ~1px so abutting
-antialiased edges don't leave a hairline. See the comments in `ImgSphere.jsx`.
+3D scene is a hard, unantialiased cut; facets also overlap by 3px (`bleed`) so
+abutting antialiased edges don't leave a hairline. The photos fill their facets
+edge to edge — set `frame` in `ImgSphere.jsx` to put a white border back. See the
+comments there.

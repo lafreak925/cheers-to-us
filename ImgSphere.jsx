@@ -63,15 +63,15 @@ function ImgSphere(props) {
   const pts = useMemo(() => {
     const R = radius;
     const dLatDeg = 180 / rows;
-    const frame = 3;                  // px of white border around each photo
+    const frame = 0;                  // px of white border around each photo (0 = edge to edge)
     // Facets are separate elements, so where two of them abut, their antialiased
     // edges each land on the same pixel at partial coverage and the background
     // shows through as a hairline — worst where a seam is near edge-on and its
     // overlap foreshortens to nothing. So grow every facet past its cell.
-    // `frame` is the natural limit: the photos are inset from the true seam
-    // either way, so up to that much overlap lands on white the neighbour was
-    // already painting, and the seam stays exactly 2*frame wide.
-    const bleed = frame;
+    // Independent of `frame`: with no border the overlap lands on the neighbour's
+    // photo instead of on shared white, which costs a couple of pixels of crop at
+    // the seam and buys a shell with no background showing through.
+    const bleed = 3;
     const out = [];
 
     for (let r = 0; r < rows; r++) {
@@ -121,9 +121,13 @@ function ImgSphere(props) {
       // to the mask's 0..100 box
       const box = (pl) => pl.map((p) =>
         (50 + (100 * p[0]) / w).toFixed(2) + ',' + ((100 * (vMax - p[1])) / h).toFixed(2)).join(' ');
-      // the photo sits inside a white border: the same cell, inset on the sphere
-      const dPhi = Math.min(frame / R, 0.35 * (phiTop - phiBot));
-      const dTheta = Math.min(frame / Math.max(1e-6, R * cosL), 0.35 * halfLon);
+      // The photo's own outline: the same cell, inset by `frame` — and then back
+      // out by `bleed`, because the facet it sits in was grown by that much. The
+      // two cancel at frame 0, so the photo covers the facet exactly rather than
+      // leaving the bleed showing as a white ring.
+      const dPhi = Math.min(frame / R, 0.35 * (phiTop - phiBot)) - bleed / R;
+      const dTheta = Math.min(frame / Math.max(1e-6, R * cosL), 0.35 * halfLon)
+        - bleed / Math.max(1e-6, R * cosL);
       const clip = polyMask(box(shape));
       const clipIn = polyMask(box(cell(dPhi, dTheta)));
       const spin = (r % 2) * (180 / ring);   // stagger alternate rows, brick-style

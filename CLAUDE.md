@@ -55,7 +55,8 @@ none of them are obvious from reading the code:
 | `serve.sh` | Static server on localhost. |
 | `wireframes.dc.html` | Earlier home-page wireframe options. Standalone, shares only `support.js`. |
 | `photos/pN.png` | 600px originals (modal, featured row). `tN.png` are the 300px facet textures. |
-| `full_Res_images/` | 1280px source photos. **Currently unused by the site** — nothing references them. |
+| `logo.png` | Coca-Cola wordmark in the header, keyed out of `full_Res_images/cocaCola.png` and cropped to its ink. Rendered white via a CSS `brightness(0) invert(1)`. |
+| `full_Res_images/` | 1280px source photos — **unused by the site**, nothing references them. `cocaCola.png` is the exception: it is the source `logo.png` was derived from, not a photo. |
 
 After changing `index.html`, `ImgSphere.jsx` or `support.js`, run
 `python3 build-standalone.py`, or the offline copy silently ships the old code.
@@ -114,11 +115,16 @@ Consequences worth keeping in mind:
   inside a CSS 3D scene is a hard 1-bit cut with visible stair-steps; masks
   composite through alpha and antialias. Fill them white — `mask-mode` defaults
   to reading alpha, but a luminance reading of black would hide every facet.
-- Facets overlap by `bleed`, which is set to `frame` (3px) and shouldn't exceed
-  it. Two abutting antialiased edges each land on the same pixel at partial
-  coverage and let the background through as a hairline; up to `frame` the
-  overlap lands on white the neighbour was already painting, so the seam stays
-  exactly `2 * frame` wide. Past that it starts fattening the borders.
+- `frame` is the white border around each photo and is now `0` — photos meet
+  edge to edge. `bleed` (3px) is independent of it: two abutting antialiased
+  edges each land on the same pixel at partial coverage and let the background
+  through as a hairline, so every facet is grown past its cell. With no border
+  that overlap lands on the neighbour's photo, costing a couple of pixels of
+  crop at the seam. If you put a border back, raising `frame` above `bleed`
+  makes the overlap land on shared white and the seam settles at `2 * frame`.
+- The photo's mask is inset by `frame` and then outset by `bleed`, so at
+  `frame = 0` the two cancel and it is exactly the facet's own mask. Inset it
+  without that correction and the bleed reappears as a white ring.
 - `arc()` samples a curved edge into chords and takes `Math.abs(to - from)` —
   the bottom edge runs right-to-left to close the outline, and without the abs
   it silently collapses to the 3-chord minimum on every facet.
@@ -152,9 +158,9 @@ Consequences worth keeping in mind:
 
 ## Open items
 
-- **`Scan a can`** (header) is a campaign CTA with no destination. It needs a
-  real target — a scan flow or landing page — rather than an invented one. It is
-  the only control on the page that does nothing.
+- **`Share a Coke`** (header, previously `Scan a can`) is a campaign CTA with no
+  destination. It needs a real target — a share flow or landing page — rather
+  than an invented one. It is the only control on the page that does nothing.
 - **`full_Res_images/`** is unused. The modal and featured row currently read the
   600px `photos/pN.png`; these 1280px files could replace them, but the mapping
   from filename to moment hasn't been established.

@@ -42,16 +42,16 @@ img{max-width:100%}
 
 <header style="position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:22px 48px">
 <div style="display:flex;align-items:center;gap:14px">
-<div style="width:40px;height:40px;border-radius:50%;background:#fff;color:#c8102e;display:flex;align-items:center;justify-content:center;font-family:'Anton',sans-serif;font-size:19px">C</div>
+<img src="logo.png" alt="Coca-Cola" style="height:30px;width:auto;display:block;filter:brightness(0) invert(1)">
 <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.16em;font-size:13px;text-transform:uppercase;opacity:.85">Cheers To Us</span>
 </div>
 <nav style="display:flex;gap:30px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.12em;font-size:13px;text-transform:uppercase;opacity:.85">
 <a href="#stories">Stories</a><a href="#globe">The Globe</a><a href="#regions">Regions</a><a href="#about">About</a>
 </nav>
-<div style="border:1.5px solid rgba(255,255,255,.7);border-radius:100px;padding:9px 20px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.12em;font-size:12px;text-transform:uppercase;cursor:pointer" style-hover="background:#fff;color:#c8102e;border-color:#fff">Scan a can</div>
+<div style="border:1.5px solid rgba(255,255,255,.7);border-radius:100px;padding:9px 20px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.12em;font-size:12px;text-transform:uppercase;cursor:pointer" style-hover="background:#fff;color:#c8102e;border-color:#fff">Share a Coke</div>
 </header>
 
-<section id="globe" style="position:relative;z-index:4;display:grid;align-items:center;gap:20px;padding:8px 40px 0;min-height:660px;grid-template-columns:{{ heroCols }}">
+<section id="globe" style="position:relative;z-index:4;display:grid;align-items:center;gap:20px;padding:8px 40px 0;min-height:780px;grid-template-columns:{{ heroCols }}">
 
 <div id="regions" style="flex-direction:column;gap:10px;animation:rise .6s ease-out both;display:flex">
 <div style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.18em;font-size:11px;text-transform:uppercase;opacity:.6;margin-bottom:4px">Filter by region</div>
@@ -139,7 +139,7 @@ img{max-width:100%}
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;sphereSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:660,&quot;min&quot;:560,&quot;max&quot;:900,&quot;step&quot;:20,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;autoRotate&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;sphereSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:820,&quot;min&quot;:560,&quot;max&quot;:1000,&quot;step&quot;:20,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;autoRotate&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
 const BASE = [
   ["p1", "Late night, first sip", "Asia", "The bar was packed. We found one table and stayed till close."],
   ["p2", "Birthday countdown", "Asia", "Nine of us, one bottle, and a very loud happy birthday."],
@@ -295,9 +295,11 @@ class Component extends DCLogic {
       // Fit the globe to whichever runs out first, the stage or the viewport
       // height — there is no floor, so it stays on-screen down to a phone.
       sphereSize: Math.round(Math.max(240, Math.min(
-        this.props.sphereSize ?? 660,
-        (wide ? vw - 620 : vw - 40),
-        vh * 0.78
+        this.props.sphereSize ?? 820,
+        // The rails are minmax(0,210px), so they give way before the globe does;
+        // this only has to reserve the padding and gaps around them.
+        (wide ? vw - 560 : vw - 32),
+        vh * 0.84
       ))),
       autoRotate: this.props.autoRotate !== false,
       regions,
