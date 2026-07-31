@@ -24,11 +24,16 @@ function ImgSphere(props) {
   const images = props.images || [];
   const size = Number(props.size) || 560;
   const radius = Number(props.radius) || size * 0.44;
-  const rows = Number(props.rows) || 12;
-  // 360/cols at the equator should match the 180/rows band height, or the cells
-  // come out letterboxed and the photos read as strips rather than tiles.
-  const cols = Number(props.cols) || 24;
-  const minRing = Number(props.minRing) || 7;
+  // Density follows the globe, because every facet is a separately composited
+  // layer carrying two SVG masks and a style write on each depth pass. A phone
+  // was rendering the desktop's 192 of them into a 360px circle — 25px a piece,
+  // detail nobody can see, for roughly double the per-frame cost. 8 rows there
+  // is 86 facets. `rows` must stay even (the polar bands have to meet on one
+  // apex) and `cols` twice `rows`, or 360/cols at the equator stops matching the
+  // 180/rows band height and the cells come out letterboxed.
+  const rows = Number(props.rows) || (size < 520 ? 8 : 12);
+  const cols = Number(props.cols) || rows * 2;
+  const minRing = Number(props.minRing) || (rows < 12 ? 5 : 7);
   const autoRotate = props.autoRotate !== false;
   const autoSpeed = props.autoRotateSpeed != null ? Number(props.autoRotateSpeed) : 0.16;
   // Degrees of spin per px dragged, tuned against a desktop-sized globe. A phone's
@@ -49,6 +54,11 @@ function ImgSphere(props) {
   const zoom = useRef(1);
   const moved = useRef(0);
   const tick = useRef(0);
+  const shade = useRef([]);
+  const lastZ = useRef([]);
+  // The depth pass is the expensive half of the loop, and it only feeds shading
+  // and stacking — nothing positional — so a phone can run it every third frame.
+  const shadeEvery = size < 520 ? 3 : 2;
 
   // Facet layout.
   //
@@ -224,7 +234,12 @@ function ImgSphere(props) {
     return out;
   }, [radius, rows, cols, minRing]);
 
-  useEffect(() => { tileRefs.current.length = pts.length; }, [pts]);
+  useEffect(() => {
+    tileRefs.current.length = pts.length;
+    // stale shading steps would suppress the first write against a new grid
+    shade.current = [];
+    lastZ.current = [];
+  }, [pts]);
 
   useEffect(() => {
     let raf, prev = 0;
@@ -250,10 +265,11 @@ function ImgSphere(props) {
         innerRef.current.style.transform =
           'translateZ(0) scale(' + zoom.current + ') rotateX(' + r.x + 'deg) rotateY(' + r.y + 'deg)';
       }
-      tick.current = (tick.current + 1) % 2;
+      tick.current = (tick.current + 1) % shadeEvery;
       const rx = r.x * D2R, ry = r.y * D2R;
-      if (tick.current === 0) { raf = requestAnimationFrame(frame); return; }
+      if (tick.current !== 0) { raf = requestAnimationFrame(frame); return; }
       const cy = Math.cos(ry), sy = Math.sin(ry), cx = Math.cos(rx), sx = Math.sin(rx);
+      const last = shade.current;
       for (let i = 0; i < pts.length; i++) {
         const el = tileRefs.current[i];
         if (!el) continue;
@@ -262,15 +278,26 @@ function ImgSphere(props) {
         const z1 = -p.cx * sy + p.cz * cy;
         const z2 = p.cy * sx + z1 * cx;
         const d = (z2 + radius) / (2 * radius); // 0 back .. 1 front
-        el.style.opacity = d < 0.5 ? String(Math.max(0, (d - 0.34) / 0.16)) : '1';
-        el.style.zIndex = String(Math.round(1000 + z2));
-        el.style.filter = 'brightness(' + (0.82 + d * 0.3).toFixed(3) + ') saturate(' + (0.92 + d * 0.16).toFixed(2) + ')';
+        // Quantised, and written only when the step actually changes. Assigning
+        // the same value still costs a style recalc, and over a slow rotation
+        // most facets sit in the same step for many passes — on a phone this
+        // drops the vast majority of the writes this loop used to make.
+        const step = Math.round(d * 64);
+        const z = Math.round(1000 + z2);
+        if (last[i] !== step) {
+          last[i] = step;
+          const q = step / 64;
+          el.style.opacity = q < 0.5 ? String(Math.max(0, (q - 0.34) / 0.16)) : '1';
+          el.style.filter =
+            'brightness(' + (0.82 + q * 0.3).toFixed(3) + ') saturate(' + (0.92 + q * 0.16).toFixed(2) + ')';
+        }
+        if (lastZ.current[i] !== z) { lastZ.current[i] = z; el.style.zIndex = String(z); }
       }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [pts, radius, autoRotate, autoSpeed]);
+  }, [pts, radius, autoRotate, autoSpeed, shadeEvery]);
 
   const down = useCallback((e) => {
     const t = e.touches ? e.touches[0] : e;
@@ -374,7 +401,10 @@ function ImgSphere(props) {
             width: p.w.toFixed(2) + 'px', height: p.h.toFixed(2) + 'px',
             backfaceVisibility: 'hidden',
             transform: 'translate3d(' + p.cx.toFixed(2) + 'px,' + p.cy.toFixed(2) + 'px,' + p.cz.toFixed(2) + 'px) rotateY(' + p.lon.toFixed(2) + 'deg) rotateX(' + p.lat.toFixed(2) + 'deg)',
-            transition: 'filter .12s linear',
+            // No filter transition: the depth pass rewrites brightness every
+            // pass, so each write would start its own interpolation and keep the
+            // compositor busy between frames. The steps are ~0.005 apart, well
+            // under what the eye can pick up, so nothing needs smoothing.
             WebkitMaskImage: p.clip, maskImage: p.clip,
             WebkitMaskSize: '100% 100%', maskSize: '100% 100%',
             WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
