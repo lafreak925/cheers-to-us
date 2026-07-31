@@ -25,6 +25,9 @@ img{max-width:100%}
 }
 @media (max-width:900px){
   header{padding:14px 20px !important;flex-wrap:wrap;gap:12px}
+  /* The wordmark is cropped to its ink, so it is ~3x as wide as it is tall —
+     full desktop height would crowd the CTA off a phone header. */
+  header img{height:36px !important}
   nav{gap:18px !important;order:3;flex-basis:100%;justify-content:center}
   h1{font-size:clamp(34px,9.5vw,64px) !important}
   #globe{padding:4px 16px 0 !important;min-height:0 !important}
@@ -32,6 +35,19 @@ img{max-width:100%}
   #stories .cards{grid-template-columns:repeat(2,1fr) !important}
   #about,footer{padding-left:20px !important;padding-right:20px !important}
   footer{flex-direction:column;gap:8px;text-align:center}
+}
+/* Landscape phones: plenty of width, almost no height. The hero type has to give
+   way or it eats the viewport and the globe opens below the fold. Last in the
+   file on purpose — it overlaps the max-width rules above, and at equal
+   specificity with !important on both sides, source order decides. */
+@media (max-height:520px) and (orientation:landscape){
+  header{padding:8px 24px !important;gap:6px}
+  header img{height:30px !important}
+  nav{gap:16px !important}
+  h1{font-size:clamp(26px,4.6vw,42px) !important;margin:2px 0 0 !important}
+  #globe{padding:0 16px !important;min-height:0 !important}
+  #stage>div:first-child>div:first-child{font-size:10px !important}
+  #stage>div:first-child>div:last-child{font-size:13px !important}
 }
 </style></helmet>
 
@@ -42,7 +58,7 @@ img{max-width:100%}
 
 <header style="position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:22px 48px">
 <div style="display:flex;align-items:center;gap:14px">
-<img src="logo.png" alt="Coca-Cola" style="height:30px;width:auto;display:block;filter:brightness(0) invert(1)">
+<img src="logo.png" alt="Coca-Cola" style="height:46px;width:auto;display:block;filter:brightness(0) invert(1)">
 <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.16em;font-size:13px;text-transform:uppercase;opacity:.85">Cheers To Us</span>
 </div>
 <nav style="display:flex;gap:30px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.12em;font-size:13px;text-transform:uppercase;opacity:.85">
@@ -64,7 +80,7 @@ img{max-width:100%}
 
 <div id="stage" style="display:flex;flex-direction:column;align-items:center;gap:4px">
 <div style="text-align:center;animation:rise .5s ease-out both">
-<div style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.3em;font-size:13px;text-transform:uppercase;opacity:.75">Real people. Real moments.</div>
+<div style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.3em;font-size:13px;text-transform:uppercase;opacity:.75;text-indent:.15em">Real people. Real moments.</div>
 <h1 style="font-family:'Anton',sans-serif;font-size:clamp(52px,7.2vw,96px);line-height:.92;letter-spacing:.01em;white-space:nowrap;margin:6px 0 2px;text-shadow:0 6px 30px rgba(0,0,0,.35)">CHEERS TO US</h1>
 <div style="font-family:'Barlow',sans-serif;font-size:19px;opacity:.85">Celebrate it with a Coke.</div>
 </div>
@@ -107,7 +123,7 @@ img{max-width:100%}
 <section id="about" style="position:relative;z-index:4;padding:0 48px 40px">
 <div style="border-top:1px solid rgba(255,255,255,.18);padding-top:18px;display:grid;grid-template-columns:{{ aboutCols }};gap:18px 40px;align-items:start">
 <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.18em;font-size:13px;text-transform:uppercase">About</span>
-<p style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.6;opacity:.78;margin:0;max-width:64ch;text-wrap:pretty">Cheers To Us is a shared wall of ordinary celebrations — birthdays, shift breaks, beach benches, kitchen tables. Every facet of the globe is one photo somebody sent in. Drag it, spin it, and open any moment to read the story behind it.</p>
+<p style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.6;opacity:.78;margin:0;max-width:64ch;text-wrap:pretty">Cheers To Us is a living globe of real, everyday celebrations. Every photo holds a story, from birthdays and anniversaries to shift breaks and after-party laughs. Whether it’s after a long workday, a tough gym session, a hot summer afternoon, or a celebration with friends and family, Coke has a way of showing up in life’s most memorable moments. Spin the world, find a moment, and add your own. Because joy may look different everywhere, but it always feels like us.</p>
 </div>
 </section>
 
@@ -171,7 +187,7 @@ function makeImages(n) {
   return out;
 }
 
-const REGIONS = ["World", "Asia", "Africa", "Europe", "Americas", "Oceania"];
+const REGIONS = ["World", "Asia", "Europe", "North America", "South America", "Africa"];
 
 class Component extends DCLogic {
   state = {
@@ -299,7 +315,9 @@ class Component extends DCLogic {
         // The rails are minmax(0,210px), so they give way before the globe does;
         // this only has to reserve the padding and gaps around them.
         (wide ? vw - 560 : vw - 32),
-        vh * 0.88
+        // Short viewports have to leave room for the hero type above the globe,
+        // or it opens with only its top edge on screen.
+        vh * (vh < 560 ? 0.66 : 0.88)
       ))),
       autoRotate: this.props.autoRotate !== false,
       regions,
@@ -309,8 +327,13 @@ class Component extends DCLogic {
       })),
       selected: sel != null,
       shareLabel: this.state.shared || "Share",
-      modalCols: vw >= 780 ? "1fr 340px" : "minmax(0,1fr)",
-      modalImgH: vw >= 780 ? "460px" : "44vh",
+      // Side-by-side needs height as well as width: a landscape phone is wide
+      // enough for the two columns and far too short for a 460px photo, which
+      // would push the story text and its buttons out of the dialog.
+      modalCols: vw >= 780 && vh >= 520 ? "1fr 340px" : "minmax(0,1fr)",
+      modalImgH: vw >= 780 && vh >= 520
+        ? Math.round(Math.min(460, vh * 0.62)) + "px"
+        : Math.round(Math.min(vh * 0.44, vw * 0.75)) + "px",
       selectedBg: sel ? 'url("' + sel.full + '")' : "none",
       selectedAlt: sel ? sel.alt : "",
       selectedTitle: sel ? sel.title : "",

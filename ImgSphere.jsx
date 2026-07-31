@@ -31,7 +31,13 @@ function ImgSphere(props) {
   const minRing = Number(props.minRing) || 7;
   const autoRotate = props.autoRotate !== false;
   const autoSpeed = props.autoRotateSpeed != null ? Number(props.autoRotateSpeed) : 0.16;
-  const sensitivity = props.dragSensitivity != null ? Number(props.dragSensitivity) : 0.32;
+  // Degrees of spin per px dragged, tuned against a desktop-sized globe. A phone's
+  // globe is less than half as wide, so the same swipe crosses far fewer pixels and
+  // the same px-based rate feels sluggish — a drag should turn the globe by what it
+  // crossed *of the globe*, so scale the rate back up as the globe shrinks.
+  const sensitivity = props.dragSensitivity != null
+    ? Number(props.dragSensitivity)
+    : Math.min(0.8, Math.max(0.32, (0.32 * 760) / size));
   const onSelect = props.onSelect;
 
   const hostRef = useRef(null);
@@ -64,7 +70,10 @@ function ImgSphere(props) {
   const pts = useMemo(() => {
     const R = radius;
     const dLatDeg = 180 / rows;
-    const frame = 1;                  // px of white border around each photo
+    // px of white border around each photo. Must stay above `bleed` or the
+    // photo's outset swallows it: below that the two cancel and no white shows.
+    // Above it the overlap lands on shared white and the seam settles at 2*frame.
+    const frame = 4;
     // Facets are separate elements, so where two of them abut, their antialiased
     // edges each land on the same pixel at partial coverage and the background
     // shows through as a hairline — worst where a seam is near edge-on and its
@@ -101,13 +110,83 @@ function ImgSphere(props) {
         for (let i = 0; i <= n; i++) a.push(proj(phi, from + ((to - from) * i) / n));
         return a;
       };
-      // inset (or, negative, outset) the cell by dPhi/dTheta radians
-      const HALF_PI = Math.PI / 2;
-      const cell = (dPhi, dTheta) =>
-        arc(Math.min(HALF_PI, phiTop - dPhi), -halfLon + dTheta, halfLon - dTheta)
-          .concat(arc(Math.max(-HALF_PI, phiBot + dPhi), halfLon - dTheta, -halfLon + dTheta));
+      // A jigsaw tab along the edge P->Q: a circle seated on the edge's midpoint
+      // and joined by a narrow neck, so it reads as a knob with an undercut
+      // rather than a bump. `sign` +1 pushes it out of the piece, -1 cuts it in.
+      //
+      // Only the longitude edges get one. A tab is safe only where the
+      // neighbour carries the matching socket — the two shapes are then exact
+      // complements and no background can show between them. Cells in a band are
+      // rotations of one another, so right-tab/left-socket mates all the way
+      // around the ring. Bands do NOT line up: ring counts run 7, 9, 15 ... 24,
+      // so a cell's northern neighbour spans a different longitude and there is
+      // nothing to mate with. Those edges stay plain curves — a tab there would
+      // land on an unbroken edge and its socket would open a hole in the shell.
+      const knob = (P, Q, sign) => {
+        const dx = Q[0] - P[0], dy = Q[1] - P[1];
+        const L = Math.hypot(dx, dy);
+        if (!L) return [];
+        const ex = dx / L, ey = dy / L;
+        // outward for this winding (top edge west->east, then south, then back)
+        const nx = -ey * sign, ny = ex * sign;
+        const neck = 0.18 * L, rise = 0.09 * L;
+        const mx = P[0] + dx / 2, my = P[1] + dy / 2;
+        const A = [mx - (ex * neck) / 2, my - (ey * neck) / 2];
+        const B = [mx + (ex * neck) / 2, my + (ey * neck) / 2];
+        const cx = mx + nx * rise, cy = my + ny * rise;
+        const r = Math.hypot(neck / 2, rise);
+        const a0 = Math.atan2(A[1] - cy, A[0] - cx);
+        let d = Math.atan2(B[1] - cy, B[0] - cx) - a0;
+        while (d <= -Math.PI) d += 2 * Math.PI;
+        while (d > Math.PI) d -= 2 * Math.PI;
+        // the major arc: the minor one hugs the chord and never leaves the edge
+        d += d > 0 ? -2 * Math.PI : 2 * Math.PI;
+        const out = [A];
+        for (let i = 1; i < 18; i++) {
+          const a = a0 + (d * i) / 18;
+          out.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+        }
+        out.push(B);
+        return out;
+      };
 
-      const shape = cell(-bleed / R, -bleed / Math.max(1e-6, R * cosL));
+      // The exact cell, with the interlocking edges.
+      const HALF_PI = Math.PI / 2;
+      const cell = () => {
+        const top = arc(Math.min(HALF_PI, phiTop), -halfLon, halfLon);
+        const bot = arc(Math.max(-HALF_PI, phiBot), halfLon, -halfLon);
+        // east edge tabs out, west edge takes the matching socket, so the piece
+        // at c+1 — the same shape, rotated — locks into this one.
+        return top
+          .concat(knob(top[top.length - 1], bot[0], 1))
+          .concat(bot)
+          .concat(knob(bot[bot.length - 1], top[0], -1));
+      };
+
+      // Grow (or, negative, shrink) the finished outline along its own normal.
+      // The cell's lat/long bounds can't carry this any more: shifting the east
+      // and west edges moves a tab and the neighbouring socket in *opposite*
+      // absolute directions, so they separate by twice the offset and the socket
+      // opens a crescent the background shows through. Offsetting the outline
+      // instead fattens a tab and shallows a socket, which is what mating wants.
+      const offset = (poly, d) => {
+        const n = poly.length;
+        return poly.map((p, i) => {
+          let nx = 0, ny = 0;
+          const edges = [[poly[(i - 1 + n) % n], p], [p, poly[(i + 1) % n]]];
+          for (let k = 0; k < 2; k++) {
+            const ex = edges[k][1][0] - edges[k][0][0], ey = edges[k][1][1] - edges[k][0][1];
+            const len = Math.hypot(ex, ey);
+            if (len > 1e-9) { nx += -ey / len; ny += ex / len; }
+          }
+          const len = Math.hypot(nx, ny);
+          // a collapsed corner — both poles have one — has no normal to follow
+          return len > 1e-9 ? [p[0] + (d * nx) / len, p[1] + (d * ny) / len] : p;
+        });
+      };
+
+      const nominal = cell();
+      const shape = offset(nominal, bleed);
       let uMax = 0, vMin = Infinity, vMax = -Infinity;
       for (let i = 0; i < shape.length; i++) {
         uMax = Math.max(uMax, Math.abs(shape[i][0]));
@@ -122,15 +201,11 @@ function ImgSphere(props) {
       // to the mask's 0..100 box
       const box = (pl) => pl.map((p) =>
         (50 + (100 * p[0]) / w).toFixed(2) + ',' + ((100 * (vMax - p[1])) / h).toFixed(2)).join(' ');
-      // The photo's own outline: the same cell, inset by `frame` — and then back
-      // out by `bleed`, because the facet it sits in was grown by that much. The
-      // two cancel at frame 0, so the photo covers the facet exactly rather than
-      // leaving the bleed showing as a white ring.
-      const dPhi = Math.min(frame / R, 0.35 * (phiTop - phiBot)) - bleed / R;
-      const dTheta = Math.min(frame / Math.max(1e-6, R * cosL), 0.35 * halfLon)
-        - bleed / Math.max(1e-6, R * cosL);
+      // The photo's own outline: the facet, inset by `frame`. At frame 0 the two
+      // coincide and the photo covers the facet exactly rather than leaving the
+      // bleed showing as a white ring.
       const clip = polyMask(box(shape));
-      const clipIn = polyMask(box(cell(dPhi, dTheta)));
+      const clipIn = polyMask(box(offset(nominal, bleed - frame)));
       // Rows are NOT staggered: where neighbouring bands carry the same ring
       // count the cell edges line up, and the grid reads as one lattice wrapping
       // the sphere rather than as brickwork.
@@ -152,16 +227,23 @@ function ImgSphere(props) {
   useEffect(() => { tileRefs.current.length = pts.length; }, [pts]);
 
   useEffect(() => {
-    let raf;
-    const frame = () => {
+    let raf, prev = 0;
+    const frame = (now) => {
+      // Everything below is integrated against real elapsed time rather than per
+      // frame. A phone rendering at 30fps — or any device throttling under load —
+      // otherwise spins the globe at exactly half speed and decays momentum at
+      // half the rate. Clamped so a backgrounded tab doesn't resume with a lurch.
+      const dt = prev ? Math.min(3, (now - prev) / 16.67) : 1;
+      prev = now;
       const r = rot.current, v = vel.current;
       if (!drag.current) {
-        r.x += v.x; r.y += v.y;
-        v.x *= 0.94; v.y *= 0.94;
+        r.x += v.x * dt; r.y += v.y * dt;
+        const decay = Math.pow(0.94, dt);
+        v.x *= decay; v.y *= decay;
         if (Math.abs(v.x) < 0.004) v.x = 0;
         if (Math.abs(v.y) < 0.004) v.y = 0;
         // Keeps turning under the cursor — only an actual drag takes it over.
-        if (autoRotate) r.y += autoSpeed;
+        if (autoRotate) r.y += autoSpeed * dt;
       }
       r.x = Math.max(-70, Math.min(70, r.x));
       if (innerRef.current) {

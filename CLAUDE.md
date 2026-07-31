@@ -125,16 +125,24 @@ Consequences worth keeping in mind:
   inside a CSS 3D scene is a hard 1-bit cut with visible stair-steps; masks
   composite through alpha and antialias. Fill them white — `mask-mode` defaults
   to reading alpha, but a luminance reading of black would hide every facet.
-- `frame` is the white border around each photo and is `1` — a hairline grid
-  rather than a mount. `bleed` (3px) is independent of it: two abutting antialiased
-  edges each land on the same pixel at partial coverage and let the background
-  through as a hairline, so every facet is grown past its cell. With no border
-  that overlap lands on the neighbour's photo, costing a couple of pixels of
-  crop at the seam. If you put a border back, raising `frame` above `bleed`
-  makes the overlap land on shared white and the seam settles at `2 * frame`.
-- The photo's mask is inset by `frame` and then outset by `bleed`, so at
-  `frame = 0` the two cancel and it is exactly the facet's own mask. Inset it
-  without that correction and the bleed reappears as a white ring.
+- Facets are **jigsaw pieces**: the east edge carries a tab, the west edge the
+  matching socket. Cells in a band are rotations of one another, so the piece at
+  `c + 1` locks into this one all the way around the ring. Only the longitude
+  edges get a tab. Bands do *not* line up — ring counts run 7, 9, 15 … 24, so a
+  cell's northern neighbour spans a different longitude and there is nothing to
+  mate with. **A tab is only ever safe where the neighbour carries the matching
+  socket**; put one on a latitude edge and its socket opens a hole in the shell.
+- `frame` is the white border around each photo and is `4`; `bleed` (3px) is the
+  overlap that stops two abutting antialiased edges from letting the background
+  through as a hairline. `frame` above `bleed` puts the overlap on shared white
+  and the seam settles at `2 * frame`.
+- Both are applied by **offsetting the finished outline along its own normal**
+  (`offset()`), not by shifting the cell's lat/long bounds. This matters now that
+  the edges interlock: moving the east and west bounds displaces a tab and the
+  neighbouring socket in *opposite* absolute directions, so they separate by
+  twice the offset and the socket opens a crescent. Offsetting the outline
+  fattens a tab and shallows a socket, which is what mating wants. The photo's
+  mask is the same outline at `bleed - frame`.
 - `arc()` samples a curved edge into chords and takes `Math.abs(to - from)` —
   the bottom edge runs right-to-left to close the outline, and without the abs
   it silently collapses to the 3-chord minimum on every facet.
