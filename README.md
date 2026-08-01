@@ -11,10 +11,10 @@
 - `ImgSphere.jsx` — the interactive globe: exact spherical-cell facets, drag + momentum + auto-rotate, wheel zoom (clamped), depth shading, click-to-open.
 - `support.js` — the dc runtime that renders the page. Generated; don't edit.
 - `build-standalone.py` — regenerates `standalone-offline.html`. **Run it after any change to `index.html`, `ImgSphere.jsx` or `support.js`**, or the offline copy silently goes stale.
-- `photos/tN.png` — 300px facet textures used on the globe. `photos/pN.png` — 600px versions for the modal and featured row.
+- `photos/tN.webp` — 300px facet textures used on the globe. `photos/pN.webp` — 900px versions for the modal and featured row. 58 photos, 5.6 MB in total.
 
 ## Editing
-- Photos and captions: the `BASE` list at the top of the logic block in `index.html`. Add a `pN.png` + `tN.png` pair and a row to `BASE`. Copy `index.html` over `Coke Globe Home.dc.html` to keep the two in sync, then rebuild the standalone.
+- Photos and captions: the `BASE` list at the top of the logic block in `index.html`. Add a `pN` + `tN` pair and a row to `BASE`, naming the file with its extension. Derivatives are made with `cwebp -q 84 -resize 900 0` and `-q 78 -resize 300 0`. Copy `index.html` over `Coke Globe Home.dc.html` to keep the two in sync, then rebuild the standalone.
 - Globe density: `rows` / `cols` in `ImgSphere.jsx` (currently 12 × 17). `rows` must stay even so the top band's edge lands exactly on the pole.
 - Size: `sphereSize` in the logic block (default 660px, shrinks to fit the stage and the viewport height).
 - Zoom limit: the `maxZoom` line in `ImgSphere.jsx`.

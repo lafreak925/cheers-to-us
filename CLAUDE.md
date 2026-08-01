@@ -60,7 +60,7 @@ none of them are obvious from reading the code:
 | `build-standalone.py` | Rebuilds that bundle from the working files. Deterministic: rebuilding unchanged input gives a byte-identical file. |
 | `serve.sh` | Static server on localhost. |
 | `wireframes.dc.html` | Earlier home-page wireframe options. Standalone, shares only `support.js`. |
-| `photos/pN.png` | 600px originals (modal, featured row). `tN.png` are the 300px facet textures. |
+| `photos/pN.webp` | 900px, quality 84 — what the modal and the featured row open. `tN.webp` are the 300px facet textures the globe wears. 58 of each. `BASE` carries the filename **with** its extension, so a mixed set needs no code change. |
 | `logo.png` | Coca-Cola wordmark in the header, keyed out of `full_Res_images/cocaCola.png` and cropped to its ink. Rendered white via a CSS `brightness(0) invert(1)`. |
 | `full_Res_images/` | 1280px source photos — **unused by the site**, nothing references them. `cocaCola.png` is the exception: it is the source `logo.png` was derived from, not a photo. |
 
