@@ -29,7 +29,54 @@ img{max-width:100%}
 [aria-disabled="true"]{cursor:default}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important}}
+html{scroll-behavior:smooth}
+section{scroll-margin-top:76px}
+
+/* Fizz — bubbles climbing the page the way they climb the inside of a glass.
+   Only transform and opacity animate, so each bubble stays on the compositor
+   and the main thread never touches them; that matters here because the globe
+   already owns the main thread. Count comes from renderVals, so a phone gets
+   fewer. */
+#fizz{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+#fizz span{position:absolute;border-radius:50%;opacity:0;
+  background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.92),rgba(255,255,255,.3) 42%,rgba(255,255,255,.04) 72%);
+  box-shadow:inset 0 -1px 3px rgba(255,255,255,.45),0 0 7px rgba(255,255,255,.22);
+  animation-name:fizzA;animation-timing-function:linear;animation-iteration-count:infinite;
+  will-change:transform,opacity}
+#fizz span:nth-child(3n){animation-name:fizzB}
+#fizz span:nth-child(3n+1){animation-name:fizzC}
+/* three drifts so they don't rise in lockstep — a bubble wobbles as it climbs */
+@keyframes fizzA{
+  0%{transform:translate3d(0,0,0) scale(.65);opacity:0}
+  10%{opacity:.9}70%{opacity:.6}
+  100%{transform:translate3d(10px,-72vh,0) scale(1.05);opacity:0}}
+@keyframes fizzB{
+  0%{transform:translate3d(0,0,0) scale(.5);opacity:0}
+  14%{opacity:.75}72%{opacity:.5}
+  100%{transform:translate3d(-14px,-80vh,0) scale(1);opacity:0}}
+@keyframes fizzC{
+  0%{transform:translate3d(0,0,0) scale(.8);opacity:0}
+  12%{opacity:.65}68%{opacity:.42}
+  100%{transform:translate3d(6px,-64vh,0) scale(1.12);opacity:0}}
+
+/* Interactive polish: everything that reacts to a pointer eases into it rather
+   than snapping. style-hover compiles to a bare hover rule with no transition
+   of its own, so the easing has to be declared here. */
+#regions [role="button"],#stories .cards>div,header>div:last-child,
+[role="dialog"] [role="button"]{
+  transition:background-color .18s ease,color .18s ease,border-color .18s ease,
+             transform .18s ease,box-shadow .18s ease}
+#regions [role="button"]:not([aria-disabled="true"]):hover{transform:translateX(2px)}
+#stories .cards>div:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.3)}
+#stories .cards>div>div:first-child{transition:transform .3s ease}
+#stories .cards>div:hover>div:first-child{transform:scale(1.04)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important}
+  html{scroll-behavior:auto}
+  /* the bubbles are the animation — clamping their duration would strobe them */
+  #fizz{display:none}
+}
 /* Below the three-column hero breakpoint the side rails stack instead of hiding. */
 @media (max-width:1219px){
   #regions,#stats{flex-direction:row !important;flex-wrap:wrap;justify-content:center;text-align:center !important;gap:10px !important}
@@ -49,6 +96,15 @@ img{max-width:100%}
   #stories .cards{grid-template-columns:repeat(2,1fr) !important}
   #about,footer{padding-left:20px !important;padding-right:20px !important}
   footer{flex-direction:column;gap:8px;text-align:center}
+  /* thumb-sized targets: the pills and the modal's controls are the only things
+     on the page a finger has to hit precisely */
+  #regions [role="button"],[role="dialog"] [role="button"]{min-height:44px}
+  [role="dialog"] [role="button"][aria-label="Close"]{width:36px;height:36px;min-height:36px}
+  nav a{padding:4px 0}
+  /* hover lifts read as stuck state on touch, where :hover latches after a tap */
+  #stories .cards>div:hover{transform:none;box-shadow:none}
+  #stories .cards>div:hover>div:first-child{transform:none}
+  #regions [role="button"]:not([aria-disabled="true"]):hover{transform:none}
 }
 /* Landscape phones: plenty of width, almost no height. The hero type has to give
    way or it eats the viewport and the globe opens below the fold. Last in the
@@ -69,6 +125,12 @@ img{max-width:100%}
 <div style="min-height:100vh;background:radial-gradient(120% 90% at 50% 42%, #b3131f 0%, #8c0f18 42%, #56070d 78%, #3b0408 100%);position:relative;overflow:hidden">
 
 <div style="position:absolute;inset:0;background:radial-gradient(60% 45% at 50% 46%, rgba(255,255,255,.14), transparent 70%);pointer-events:none"></div>
+
+<div id="fizz" aria-hidden="true">
+<sc-for list="{{ bubbles }}" as="b" hint-placeholder-count="0">
+<span style="left:{{ b.left }};top:{{ b.top }};width:{{ b.size }};height:{{ b.size }};animation-duration:{{ b.dur }};animation-delay:{{ b.delay }}"></span>
+</sc-for>
+</div>
 
 <header style="position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:22px 48px">
 <div style="display:flex;align-items:center;gap:14px">
@@ -203,6 +265,28 @@ function makeImages(n) {
 
 const REGIONS = ["World", "Asia", "Europe", "North America", "South America", "Africa"];
 
+// Fizz. Deterministic rather than random, so a resize re-render doesn't
+// reshuffle the bubbles under the viewer. The negative delays start each one
+// part-way through its climb, so the page opens mid-fizz instead of with every
+// bubble sitting at the bottom waiting to go.
+function makeBubbles(n) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const r = (k) => {
+      const v = Math.sin((i + 1) * 12.9898 + k * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    out.push({
+      left: (r(1) * 98).toFixed(2) + "%",
+      top: (10 + r(2) * 88).toFixed(2) + "%",
+      size: (7 + r(3) * 19).toFixed(1) + "px",
+      dur: (11 + r(4) * 13).toFixed(1) + "s",
+      delay: "-" + (r(5) * 18).toFixed(1) + "s",
+    });
+  }
+  return out;
+}
+
 class Component extends DCLogic {
   state = {
     images: makeImages(64),
@@ -317,6 +401,9 @@ class Component extends DCLogic {
     };
     return {
       images: imgs,
+      // half as many on a phone: they are compositor-only, but each one is still
+      // a layer, and the globe is already the expensive thing on that screen
+      bubbles: makeBubbles(vw < 700 ? 12 : 26),
       total: "1,264",
       countries: 64,
       regionLabel: this.state.region,

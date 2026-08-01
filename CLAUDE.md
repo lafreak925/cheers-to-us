@@ -91,6 +91,13 @@ photos — `photos/` has to sit next to it.
   are passed as values (`onClick="{{ handler }}"`), so they read their arguments
   off `e.currentTarget.dataset`.
 
+The rising bubbles are `#fizz`, a decorative layer behind the content: markup in
+the `<x-dc>` block, placement from `makeBubbles()` in `renderVals`, animation in
+the `<helmet>` style block. Keep them **transform/opacity only** — the globe
+already owns the main thread, and anything that forces layout or paint per frame
+there is felt immediately on a phone. They are hidden outright under
+`prefers-reduced-motion` rather than duration-clamped, which would strobe them.
+
 Styling is inline `style="..."` almost everywhere. Responsive rules that inline
 styles can't express live in the `<style>` block in `<helmet>` and target tags
 and ids (`header`, `nav`, `#globe`, `#stage`, `#regions`, `#stats`, `#stories
@@ -125,24 +132,21 @@ Consequences worth keeping in mind:
   inside a CSS 3D scene is a hard 1-bit cut with visible stair-steps; masks
   composite through alpha and antialias. Fill them white — `mask-mode` defaults
   to reading alpha, but a luminance reading of black would hide every facet.
-- Facets are **jigsaw pieces**: the east edge carries a tab, the west edge the
-  matching socket. Cells in a band are rotations of one another, so the piece at
-  `c + 1` locks into this one all the way around the ring. Only the longitude
-  edges get a tab. Bands do *not* line up — ring counts run 7, 9, 15 … 24, so a
-  cell's northern neighbour spans a different longitude and there is nothing to
-  mate with. **A tab is only ever safe where the neighbour carries the matching
-  socket**; put one on a latitude edge and its socket opens a hole in the shell.
-- `frame` is the white border around each photo and is `4`; `bleed` (3px) is the
-  overlap that stops two abutting antialiased edges from letting the background
-  through as a hairline. `frame` above `bleed` puts the overlap on shared white
-  and the seam settles at `2 * frame`.
+- `frame` is the white border around each photo and is `2`, so neighbours are
+  separated by a `2 * frame` hairline. `bleed` (1.2px) is the overlap that stops
+  two abutting antialiased edges from letting the background through as a
+  hairline of their own. **`frame` has to stay above `bleed`** or the photo's
+  outset swallows the border and no white shows at all. Lowering `bleed` is the
+  change most likely to bring seams back — re-run the green-backdrop check after.
 - Both are applied by **offsetting the finished outline along its own normal**
-  (`offset()`), not by shifting the cell's lat/long bounds. This matters now that
-  the edges interlock: moving the east and west bounds displaces a tab and the
-  neighbouring socket in *opposite* absolute directions, so they separate by
-  twice the offset and the socket opens a crescent. Offsetting the outline
-  fattens a tab and shallows a socket, which is what mating wants. The photo's
-  mask is the same outline at `bleed - frame`.
+  (`offset()`), not by shifting the cell's lat/long bounds: on a curved latitude
+  edge an angular inset is not an even px distance, so the border came out
+  thicker at the corners than in the middle. The photo's mask is the same
+  outline at `bleed - frame`.
+- The facets were briefly cut as interlocking jigsaw pieces. If that ever comes
+  back: a tab is only safe where the neighbour carries the matching socket, which
+  means longitude edges only. Bands don't line up — ring counts run 7, 9, 15 … 24
+  — so a latitude tab has nothing to mate with and its socket opens a hole.
 - `arc()` samples a curved edge into chords and takes `Math.abs(to - from)` —
   the bottom edge runs right-to-left to close the outline, and without the abs
   it silently collapses to the 3-chord minimum on every facet.

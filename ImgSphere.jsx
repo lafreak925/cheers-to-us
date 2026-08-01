@@ -82,8 +82,9 @@ function ImgSphere(props) {
     const dLatDeg = 180 / rows;
     // px of white border around each photo. Must stay above `bleed` or the
     // photo's outset swallows it: below that the two cancel and no white shows.
-    // Above it the overlap lands on shared white and the seam settles at 2*frame.
-    const frame = 4;
+    // Above it the overlap lands on shared white and the seam settles at 2*frame,
+    // so this is a 4px hairline between neighbours.
+    const frame = 2;
     // Facets are separate elements, so where two of them abut, their antialiased
     // edges each land on the same pixel at partial coverage and the background
     // shows through as a hairline — worst where a seam is near edge-on and its
@@ -91,7 +92,7 @@ function ImgSphere(props) {
     // Independent of `frame`: with no border the overlap lands on the neighbour's
     // photo instead of on shared white, which costs a couple of pixels of crop at
     // the seam and buys a shell with no background showing through.
-    const bleed = 3;
+    const bleed = 1.2;
     const out = [];
 
     for (let r = 0; r < rows; r++) {
@@ -120,65 +121,18 @@ function ImgSphere(props) {
         for (let i = 0; i <= n; i++) a.push(proj(phi, from + ((to - from) * i) / n));
         return a;
       };
-      // A jigsaw tab along the edge P->Q: a circle seated on the edge's midpoint
-      // and joined by a narrow neck, so it reads as a knob with an undercut
-      // rather than a bump. `sign` +1 pushes it out of the piece, -1 cuts it in.
-      //
-      // Only the longitude edges get one. A tab is safe only where the
-      // neighbour carries the matching socket — the two shapes are then exact
-      // complements and no background can show between them. Cells in a band are
-      // rotations of one another, so right-tab/left-socket mates all the way
-      // around the ring. Bands do NOT line up: ring counts run 7, 9, 15 ... 24,
-      // so a cell's northern neighbour spans a different longitude and there is
-      // nothing to mate with. Those edges stay plain curves — a tab there would
-      // land on an unbroken edge and its socket would open a hole in the shell.
-      const knob = (P, Q, sign) => {
-        const dx = Q[0] - P[0], dy = Q[1] - P[1];
-        const L = Math.hypot(dx, dy);
-        if (!L) return [];
-        const ex = dx / L, ey = dy / L;
-        // outward for this winding (top edge west->east, then south, then back)
-        const nx = -ey * sign, ny = ex * sign;
-        const neck = 0.18 * L, rise = 0.09 * L;
-        const mx = P[0] + dx / 2, my = P[1] + dy / 2;
-        const A = [mx - (ex * neck) / 2, my - (ey * neck) / 2];
-        const B = [mx + (ex * neck) / 2, my + (ey * neck) / 2];
-        const cx = mx + nx * rise, cy = my + ny * rise;
-        const r = Math.hypot(neck / 2, rise);
-        const a0 = Math.atan2(A[1] - cy, A[0] - cx);
-        let d = Math.atan2(B[1] - cy, B[0] - cx) - a0;
-        while (d <= -Math.PI) d += 2 * Math.PI;
-        while (d > Math.PI) d -= 2 * Math.PI;
-        // the major arc: the minor one hugs the chord and never leaves the edge
-        d += d > 0 ? -2 * Math.PI : 2 * Math.PI;
-        const out = [A];
-        for (let i = 1; i < 18; i++) {
-          const a = a0 + (d * i) / 18;
-          out.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
-        }
-        out.push(B);
-        return out;
-      };
-
-      // The exact cell, with the interlocking edges.
+      // The exact cell: the two latitude edges sampled as curves, closed by the
+      // straight longitude edges where neighbouring tangent planes meet.
       const HALF_PI = Math.PI / 2;
-      const cell = () => {
-        const top = arc(Math.min(HALF_PI, phiTop), -halfLon, halfLon);
-        const bot = arc(Math.max(-HALF_PI, phiBot), halfLon, -halfLon);
-        // east edge tabs out, west edge takes the matching socket, so the piece
-        // at c+1 — the same shape, rotated — locks into this one.
-        return top
-          .concat(knob(top[top.length - 1], bot[0], 1))
-          .concat(bot)
-          .concat(knob(bot[bot.length - 1], top[0], -1));
-      };
+      const cell = () =>
+        arc(Math.min(HALF_PI, phiTop), -halfLon, halfLon)
+          .concat(arc(Math.max(-HALF_PI, phiBot), halfLon, -halfLon));
 
       // Grow (or, negative, shrink) the finished outline along its own normal.
-      // The cell's lat/long bounds can't carry this any more: shifting the east
-      // and west edges moves a tab and the neighbouring socket in *opposite*
-      // absolute directions, so they separate by twice the offset and the socket
-      // opens a crescent the background shows through. Offsetting the outline
-      // instead fattens a tab and shallows a socket, which is what mating wants.
+      // Doing it here rather than by shifting the cell's lat/long bounds keeps
+      // the offset a true, even px distance all the way round — on a curved
+      // latitude edge an angular inset is not, and the border came out uneven
+      // between the middle of an edge and its corners.
       const offset = (poly, d) => {
         const n = poly.length;
         return poly.map((p, i) => {

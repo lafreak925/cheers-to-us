@@ -29,8 +29,6 @@ shapes are SVG alpha masks rather than `clip-path`, because a clip inside a CSS
 3D scene is a hard, unantialiased cut; facets also overlap by 3px (`bleed`) so
 abutting antialiased edges don't leave a hairline.
 
-The east/west edges are cut as interlocking jigsaw tabs — every piece tabs east
-and sockets west, so it locks into its neighbour around the band. The north/south
-edges stay plain curves, because bands carry different numbers of cells and a
-piece has no single neighbour above it to mate with. `frame` in `ImgSphere.jsx`
-is the white border tracing each piece. See the comments there.
+`frame` in `ImgSphere.jsx` is the thin white border around each photo (2px, so a
+4px hairline between neighbours); it has to stay above `bleed` or the photo's
+outset swallows it. See the comments there.
