@@ -31,6 +31,13 @@ img{max-width:100%}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
 html{scroll-behavior:smooth}
 section{scroll-margin-top:76px}
+/* Everything below the globe is off-screen at load. Skipping its rendering
+   until it is scrolled to keeps the first paint — the expensive one, where the
+   globe is building 86 masked layers — from also laying out the card grid.
+   The intrinsic sizes keep the scrollbar honest so the anchors still land. */
+#stories{content-visibility:auto;contain-intrinsic-size:auto 420px}
+#about{content-visibility:auto;contain-intrinsic-size:auto 200px}
+footer{content-visibility:auto;contain-intrinsic-size:auto 120px}
 
 /* Fizz — bubbles climbing the page the way they climb the inside of a glass.
    Only transform and opacity animate, so each bubble stays on the compositor
@@ -330,7 +337,7 @@ function makeBubbles(n) {
       left: (r(1) * 98).toFixed(2) + "%",
       top: (10 + r(2) * 88).toFixed(2) + "%",
       size: (7 + r(3) * 19).toFixed(1) + "px",
-      dur: (11 + r(4) * 13).toFixed(1) + "s",
+      dur: (7 + r(4) * 9).toFixed(1) + "s",
       delay: "-" + (r(5) * 18).toFixed(1) + "s",
     });
   }
@@ -440,7 +447,22 @@ class Component extends DCLogic {
         title: count ? count + " moments from " + name : "No moments from " + name + " yet",
       };
     });
-    const feat = [0, 2, 5, 8].map((i) => i % imgs.length);
+    // Four cards, each from a different region where the filter allows it.
+    // Fixed indices used to land on the first rows of BASE every time, so the
+    // row read "Asia, Asia, Asia, Asia" however much of the world was on the
+    // globe. Falls back to evenly spaced picks once the regions run out — which
+    // is what happens as soon as you filter down to one of them.
+    const feat = [];
+    const seen = new Set();
+    for (let i = 0; i < imgs.length && feat.length < 4; i++) {
+      if (seen.has(imgs[i].region)) continue;
+      seen.add(imgs[i].region);
+      feat.push(i);
+    }
+    for (let i = 0; feat.length < 4 && feat.length < imgs.length; i++) {
+      const idx = Math.floor((i * imgs.length) / 4) % imgs.length;
+      if (!feat.includes(idx)) feat.push(idx);
+    }
     const selectFeatured = (e) => this.pick(Number(e.currentTarget.dataset.idx));
     const prevMoment = () => this.pick(this.state.sel - 1);
     const nextMoment = () => this.pick(this.state.sel + 1);
@@ -451,10 +473,15 @@ class Component extends DCLogic {
       if (has) this.setState({ region: name, sel: null });
     };
     return {
-      images: imgs,
+      // A phone downloads one texture per distinct photo on the globe, and with
+      // 58 of them that is the biggest thing it fetches. The facets already
+      // repeat — 86 of them over this list — so on a small screen it wears every
+      // other photo and pays for half the textures. The filter, the cards and
+      // the modal all still run off the full set.
+      images: vw < 700 && imgs.length > 40 ? imgs.filter((_, i) => i % 2 === 0) : imgs,
       // half as many on a phone: they are compositor-only, but each one is still
       // a layer, and the globe is already the expensive thing on that screen
-      bubbles: makeBubbles(vw < 700 ? 12 : 26),
+      bubbles: makeBubbles(vw < 700 ? 18 : 36),
       total: "1,264",
       countries: 64,
       regionLabel: this.state.region,
@@ -473,8 +500,12 @@ class Component extends DCLogic {
       ))),
       autoRotate: this.props.autoRotate !== false,
       regions,
+      // The cards are ~170px wide on a phone and ~290px on a desktop, so below
+      // the two-column breakpoint the 300px texture is already oversampled and
+      // the 900px version is four downloads of pure waste before first paint.
       featured: feat.map((idx) => ({
-        idx, bg: 'url("' + imgs[idx].full + '")', alt: imgs[idx].alt, tag: imgs[idx].region,
+        idx, bg: 'url("' + (vw < 900 ? imgs[idx].src : imgs[idx].full) + '")',
+        alt: imgs[idx].alt, tag: imgs[idx].region,
         aria: "Open moment: " + imgs[idx].title,
       })),
       selected: sel != null,
@@ -491,7 +522,13 @@ class Component extends DCLogic {
       selectedTitle: sel ? sel.title : "",
       selectedDesc: sel ? sel.description : "",
       selectedMeta: sel ? "Moment " + sel.no + " · " + sel.region : "",
-      selectMoment: (img, i) => this.pick(i),
+      // The globe may be wearing the subsampled list, in which case its facet
+      // index is not an index into `imgs` — find the moment by identity, or the
+      // modal opens somebody else's photo.
+      selectMoment: (img, i) => {
+        const at = imgs.indexOf(img);
+        this.pick(at >= 0 ? at : i);
+      },
       selectFeatured: selectFeatured,
       selectFeaturedKey: this.key(selectFeatured),
       prevMoment: prevMoment,

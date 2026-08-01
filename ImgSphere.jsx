@@ -369,6 +369,9 @@ function ImgSphere(props) {
           React.createElement('img', {
             src: img.src, alt: img.alt || '', draggable: false,
             loading: i < 8 ? 'eager' : 'lazy',
+            // off the main thread: a synchronous decode of a texture lands as a
+            // dropped frame, and the globe is mid-spin the whole time they arrive
+            decoding: 'async',
             style: {
               width: '100%', height: '100%', objectFit: 'cover', display: 'block',
               WebkitMaskImage: p.clipIn, maskImage: p.clipIn,
