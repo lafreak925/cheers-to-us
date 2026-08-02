@@ -91,6 +91,13 @@ photos — `photos/` has to sit next to it.
   are passed as values (`onClick="{{ handler }}"`), so they read their arguments
   off `e.currentTarget.dataset`.
 
+The header is a floating rounded bar, sticky, white at rest and glass once
+`state.scrolled` crosses 24px. Two traps: the page wrapper must stay
+`overflow:clip` and never go back to `overflow:hidden`, because that makes it a
+scroll container and the sticky header rides away with it — and the header's
+appearance lives in the `<helmet>` stylesheet rather than inline, since an
+inline background outranks the `.scrolled` class.
+
 The rising bubbles are `#fizz`, a decorative layer behind the content: markup in
 the `<x-dc>` block, placement from `makeBubbles()` in `renderVals`, animation in
 the `<helmet>` style block. Keep them **transform/opacity only** — the globe
