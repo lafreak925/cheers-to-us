@@ -91,13 +91,12 @@ photos — `photos/` has to sit next to it.
   are passed as values (`onClick="{{ handler }}"`), so they read their arguments
   off `e.currentTarget.dataset`.
 
-The header is a white, edge-to-edge sticky bar. The page wrapper must stay
-`overflow:clip` and never go back to `overflow:hidden`: that makes it a scroll
-container, and the sticky header then sticks to *it* rather than the viewport
-and rides away as you scroll. The header's appearance lives in the `<helmet>`
-stylesheet rather than inline, because an inline background outranks anything a
-responsive block wants to put over it — the same trap that left the nav in the
-bar on phones and pushed the CTA off-screen.
+Header and footer sit on the red field with no surface of their own — a white
+bar and a white footer card were both tried and reverted. Below 900px the nav
+collapses into `#burger` and a panel. Watch the inline-style trap there: the nav
+carries an inline `display:flex`, so the responsive rules that hide it need
+`!important`, and without that the links stay in the bar and shove the CTA past
+the right edge, where the wrapper's clipping hides it instead of reporting it.
 
 The rising bubbles are `#fizz`, a decorative layer behind the content: markup in
 the `<x-dc>` block, placement from `makeBubbles()` in `renderVals`, animation in
@@ -168,6 +167,16 @@ Consequences worth keeping in mind:
   the release registers as a tap and opens a moment.
 - The per-frame loop writes styles directly to DOM nodes via refs and runs the
   depth pass every other frame. Don't convert it to React state.
+- Phones get a smaller globe in three ways, all keyed off `size < 520`: 8 rows
+  rather than 12 (6 if `hardwareConcurrency`/`deviceMemory` report a lean
+  device), the depth pass every third frame, and **no per-facet CSS filter** —
+  each filter is a compositing pass, and 86 of them a frame is what made this
+  unusable. Depth there rests on the back-face fade alone.
+- The loop **starts unconditionally**, and an IntersectionObserver only ever
+  pauses it (as does `visibilitychange`). Gating the start on the observer
+  instead leaves the globe dead whenever the callback doesn't arrive — a total,
+  silent failure, against a cost of merely some wasted frames. It was written
+  that way first and the globe never span.
 
 ## Conventions
 

@@ -31,9 +31,18 @@ function ImgSphere(props) {
   // is 86 facets. `rows` must stay even (the polar bands have to meet on one
   // apex) and `cols` twice `rows`, or 360/cols at the equator stops matching the
   // 180/rows band height and the cells come out letterboxed.
-  const rows = Number(props.rows) || (size < 520 ? 8 : 12);
+  // A phone that reports four cores or less is the one this used to be unusable
+  // on, so it drops another tier: 6 rows is 50 facets against a desktop's 192.
+  // Both figures are advisory and often absent — assume the roomy case.
+  const lean = typeof navigator !== 'undefined' &&
+    ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4);
+  const rows = Number(props.rows) || (size < 520 ? (lean ? 6 : 8) : 12);
   const cols = Number(props.cols) || rows * 2;
   const minRing = Number(props.minRing) || (rows < 12 ? 5 : 7);
+  // Per-facet CSS filters are a compositing pass each, and on a phone that is
+  // 50-86 of them every frame for a shading gradient nobody is studying. Depth
+  // there is carried by the back-face fade alone.
+  const shadeFilter = size >= 520;
   const autoRotate = props.autoRotate !== false;
   const autoSpeed = props.autoRotateSpeed != null ? Number(props.autoRotateSpeed) : 0.16;
   // Degrees of spin per px dragged, tuned against a desktop-sized globe. A phone's
@@ -196,7 +205,7 @@ function ImgSphere(props) {
   }, [pts]);
 
   useEffect(() => {
-    let raf, prev = 0;
+    let raf = 0, prev = 0;
     const frame = (now) => {
       // Everything below is integrated against real elapsed time rather than per
       // frame. A phone rendering at 30fps — or any device throttling under load —
@@ -242,16 +251,41 @@ function ImgSphere(props) {
           last[i] = step;
           const q = step / 64;
           el.style.opacity = q < 0.5 ? String(Math.max(0, (q - 0.34) / 0.16)) : '1';
-          el.style.filter =
-            'brightness(' + (0.82 + q * 0.3).toFixed(3) + ') saturate(' + (0.92 + q * 0.16).toFixed(2) + ')';
+          if (shadeFilter) {
+            el.style.filter =
+              'brightness(' + (0.82 + q * 0.3).toFixed(3) + ') saturate(' + (0.92 + q * 0.16).toFixed(2) + ')';
+          }
         }
         if (lastZ.current[i] !== z) { lastZ.current[i] = z; el.style.zIndex = String(z); }
       }
       raf = requestAnimationFrame(frame);
     };
-    raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
-  }, [pts, radius, autoRotate, autoSpeed, shadeEvery]);
+    // Nothing below the globe needs it spinning. Scrolling to the cards used to
+    // leave the whole loop running off-screen — 50-192 style writes a frame for
+    // pixels nobody can see, which on a phone is the difference between the rest
+    // of the page scrolling smoothly and not. Same for a backgrounded tab.
+    const start = () => { if (!raf) { prev = 0; raf = requestAnimationFrame(frame); } };
+    const stop = () => { if (raf) { cancelAnimationFrame(raf); raf = 0; } };
+    // Start first, and let the observer only ever pause it. Gating the start on
+    // IntersectionObserver instead means anything that keeps the callback from
+    // arriving leaves the globe dead on the page — the failure is total and
+    // silent, where the cost of not pausing is merely some wasted frames.
+    start();
+    const host = hostRef.current;
+    const io = host && typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver(
+          (e) => { (e[0].isIntersecting && !document.hidden) ? start() : stop(); },
+          { rootMargin: '120px' })
+      : null;
+    if (io) io.observe(host);
+    const onVis = () => { document.hidden ? stop() : start(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      stop();
+      if (io) io.disconnect();
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [pts, radius, autoRotate, autoSpeed, shadeEvery, shadeFilter]);
 
   const down = useCallback((e) => {
     const t = e.touches ? e.touches[0] : e;
