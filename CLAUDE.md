@@ -172,11 +172,22 @@ Consequences worth keeping in mind:
   device), the depth pass every third frame, and **no per-facet CSS filter** —
   each filter is a compositing pass, and 86 of them a frame is what made this
   unusable. Depth there rests on the back-face fade alone.
-- The loop **starts unconditionally**, and an IntersectionObserver only ever
-  pauses it (as does `visibilitychange`). Gating the start on the observer
-  instead leaves the globe dead whenever the callback doesn't arrive — a total,
-  silent failure, against a cost of merely some wasted frames. It was written
-  that way first and the globe never span.
+- **Phones don't run the loop at all while idle.** The rotation is one CSS
+  keyframe animation (`imgsphere-spin`) on the inner container, so the browser
+  turns the globe on the compositor and no script runs per frame. `down` takes
+  it back — `detachSpin()` freezes it at the angle the animation had reached,
+  computed from elapsed time rather than read back out of a matrix — and the
+  loop then carries the drag. Release hands it over again, with a negative
+  `animation-delay` so it resumes from where the drag left it.
+- Release hands back **directly in the `up` handler** when there is no momentum,
+  not on the next frame. Waiting for a frame means a throttled rAF leaves the
+  globe sitting still for as long as the throttle lasts.
+- There is deliberately **no IntersectionObserver** pausing the loop. It was
+  tried: when the callback doesn't arrive the globe simply never moves, and the
+  failure is silent. Browsers already throttle off-screen CSS animations.
+- Phones also get a static lighting overlay — one element, a highlight and a
+  rim shadow — because with no per-facet brightness the grid otherwise reads as
+  a flat mosaic rather than a sphere.
 
 ## Conventions
 

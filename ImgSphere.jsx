@@ -53,6 +53,13 @@ function ImgSphere(props) {
     ? Number(props.dragSensitivity)
     : Math.min(0.8, Math.max(0.32, (0.32 * 760) / size));
   const onSelect = props.onSelect;
+  // Phones hand the idle spin to the compositor: one CSS animation on the
+  // container instead of a script loop rewriting every facet each frame. Nothing
+  // is computed per frame until a finger is actually on the globe, and the
+  // browser keeps animating it off the main thread, so page scroll stays smooth
+  // no matter what else is running. Declared after autoSpeed, which it needs.
+  const cssSpin = size < 520;
+  const spinPeriod = 360 / (autoSpeed * 60);   // seconds for one full turn
 
   const hostRef = useRef(null);
   const innerRef = useRef(null);
@@ -65,6 +72,10 @@ function ImgSphere(props) {
   const tick = useRef(0);
   const shade = useRef([]);
   const lastZ = useRef([]);
+  const spinFrom = useRef(0);   // angle the CSS animation was handed
+  const spinAt = useRef(0);     // when it was handed over
+  const spinning = useRef(false);
+  const loopCtl = useRef(null);
   // The depth pass is the expensive half of the loop, and it only feeds shading
   // and stacking — nothing positional — so a phone can run it every third frame.
   const shadeEvery = size < 520 ? 3 : 2;
@@ -204,6 +215,50 @@ function ImgSphere(props) {
     lastZ.current = [];
   }, [pts]);
 
+  // The keyframes for that compositor spin. Injected rather than written into
+  // the page's stylesheet so the component stays self-contained — it is loaded
+  // by <x-import> and has no stylesheet of its own.
+  useEffect(() => {
+    if (!cssSpin || document.getElementById('imgsphere-spin')) return;
+    const s = document.createElement('style');
+    s.id = 'imgsphere-spin';
+    s.textContent =
+      '@keyframes imgsphere-spin{' +
+      'from{transform:translateZ(0) rotateX(var(--sx,-12deg)) rotateY(0deg)}' +
+      'to{transform:translateZ(0) rotateX(var(--sx,-12deg)) rotateY(360deg)}}';
+    document.head.appendChild(s);
+  }, [cssSpin]);
+
+  // Where the CSS spin has got to. The animation is linear and started at a
+  // known angle and time, so this is arithmetic rather than reading a matrix
+  // back out of the compositor.
+  const spinAngle = useCallback(() => {
+    if (!spinning.current) return rot.current.y;
+    const secs = (performance.now() - spinAt.current) / 1000;
+    return spinFrom.current + (secs / spinPeriod) * 360;
+  }, [spinPeriod]);
+
+  const attachSpin = useCallback(() => {
+    const el = innerRef.current;
+    if (!el || !autoRotate) return;
+    const y = ((rot.current.y % 360) + 360) % 360;
+    el.style.setProperty('--sx', rot.current.x + 'deg');
+    // negative delay: the animation resumes at the angle the drag left it on
+    el.style.animation = 'imgsphere-spin ' + spinPeriod + 's linear infinite';
+    el.style.animationDelay = -(y / 360) * spinPeriod + 's';
+    spinFrom.current = y;
+    spinAt.current = performance.now();
+    spinning.current = true;
+  }, [autoRotate, spinPeriod]);
+
+  const detachSpin = useCallback(() => {
+    const el = innerRef.current;
+    if (!el) return;
+    rot.current.y = spinAngle();
+    spinning.current = false;
+    el.style.animation = 'none';
+  }, [spinAngle]);
+
   useEffect(() => {
     let raf = 0, prev = 0;
     const frame = (now) => {
@@ -227,6 +282,18 @@ function ImgSphere(props) {
       if (innerRef.current) {
         innerRef.current.style.transform =
           'translateZ(0) scale(' + zoom.current + ') rotateX(' + r.x + 'deg) rotateY(' + r.y + 'deg)';
+      }
+      // On a phone the loop exists only to carry a drag and its momentum. Once
+      // the globe is still again the CSS animation takes it back and the loop
+      // stops outright — no script runs per frame while it idles.
+      if (cssSpin) {
+        if (!drag.current && !v.x && !v.y) {
+          attachSpin();
+          raf = 0;
+          return;
+        }
+        raf = requestAnimationFrame(frame);
+        return;
       }
       tick.current = (tick.current + 1) % shadeEvery;
       const rx = r.x * D2R, ry = r.y * D2R;
@@ -260,40 +327,40 @@ function ImgSphere(props) {
       }
       raf = requestAnimationFrame(frame);
     };
-    // Nothing below the globe needs it spinning. Scrolling to the cards used to
-    // leave the whole loop running off-screen — 50-192 style writes a frame for
-    // pixels nobody can see, which on a phone is the difference between the rest
-    // of the page scrolling smoothly and not. Same for a backgrounded tab.
     const start = () => { if (!raf) { prev = 0; raf = requestAnimationFrame(frame); } };
     const stop = () => { if (raf) { cancelAnimationFrame(raf); raf = 0; } };
-    // Start first, and let the observer only ever pause it. Gating the start on
-    // IntersectionObserver instead means anything that keeps the callback from
-    // arriving leaves the globe dead on the page — the failure is total and
-    // silent, where the cost of not pausing is merely some wasted frames.
-    start();
-    const host = hostRef.current;
-    const io = host && typeof IntersectionObserver !== 'undefined'
-      ? new IntersectionObserver(
-          (e) => { (e[0].isIntersecting && !document.hidden) ? start() : stop(); },
-          { rootMargin: '120px' })
-      : null;
-    if (io) io.observe(host);
-    const onVis = () => { document.hidden ? stop() : start(); };
+    loopCtl.current = { start, stop };
+
+    // No IntersectionObserver gate here. Pausing the loop off-screen sounds free
+    // and is not: when the callback does not arrive the globe simply never
+    // moves, which is exactly what happened on phones, and the failure is silent.
+    // The compositor spin below makes the saving moot anyway — browsers already
+    // throttle an off-screen CSS animation.
+    if (cssSpin) attachSpin(); else start();
+    const onVis = () => {
+      if (document.hidden) stop();
+      else if (!cssSpin || drag.current) start();
+    };
     document.addEventListener('visibilitychange', onVis);
     return () => {
       stop();
-      if (io) io.disconnect();
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, [pts, radius, autoRotate, autoSpeed, shadeEvery, shadeFilter]);
+  }, [pts, radius, autoRotate, autoSpeed, shadeEvery, shadeFilter, cssSpin, attachSpin]);
 
   const down = useCallback((e) => {
+    // take the globe back off the compositor at whatever angle it had reached,
+    // and wake the loop that carries the drag
+    if (cssSpin) {
+      detachSpin();
+      if (loopCtl.current) loopCtl.current.start();
+    }
     const t = e.touches ? e.touches[0] : e;
     // On touch the gesture's axis isn't known yet — see the move handler.
     drag.current = { x: t.clientX, y: t.clientY, sx: t.clientX, sy: t.clientY, axis: e.touches ? null : 'free' };
     vel.current = { x: 0, y: 0 };
     moved.current = 0;
-  }, []);
+  }, [cssSpin, detachSpin]);
 
   useEffect(() => {
     const move = (e) => {
@@ -324,7 +391,19 @@ function ImgSphere(props) {
       d.x = t.clientX; d.y = t.clientY;
       if (e.touches) e.preventDefault();
     };
-    const up = () => { drag.current = null; };
+    const up = () => {
+      drag.current = null;
+      // A release with no throw behind it — a tap, or a drag that ended still —
+      // hands straight back to the compositor rather than waiting on a frame to
+      // notice. Under a throttled rAF that frame can be a long time coming, and
+      // until it does the globe just sits there. With momentum, the loop carries
+      // it and hands over when the velocity dies.
+      const v = vel.current;
+      if (cssSpin && Math.abs(v.x) < 0.01 && Math.abs(v.y) < 0.01) {
+        if (loopCtl.current) loopCtl.current.stop();
+        attachSpin();
+      }
+    };
     document.addEventListener('mousemove', move);
     document.addEventListener('mouseup', up);
     document.addEventListener('touchmove', move, { passive: false });
@@ -337,7 +416,7 @@ function ImgSphere(props) {
       document.removeEventListener('touchend', up);
       document.removeEventListener('touchcancel', up);
     };
-  }, [sensitivity]);
+  }, [sensitivity, cssSpin, attachSpin]);
 
   useEffect(() => {
     const el = hostRef.current;
@@ -377,6 +456,7 @@ function ImgSphere(props) {
         willChange: 'transform',
       },
     },
+      // fall through to the facets
       pts.map((p, i) => {
         const img = images[i % images.length] || {};
         return React.createElement('div', {
@@ -416,7 +496,23 @@ function ImgSphere(props) {
           })
         );
       })
-    )
+    ),
+    // Sphere lighting, faked in one static element. Phones get no per-facet
+    // brightness any more, so without this the grid reads as a flat mosaic
+    // rather than something round: a highlight up and left, and the rim falling
+    // away into shadow. It sits over the facets, so it must not eat their taps.
+    cssSpin ? React.createElement('div', {
+      key: 'shade',
+      'aria-hidden': 'true',
+      style: {
+        position: 'absolute', pointerEvents: 'none', borderRadius: '50%',
+        left: half - radius + 'px', top: half - radius + 'px',
+        width: radius * 2 + 'px', height: radius * 2 + 'px',
+        background:
+          'radial-gradient(circle at 34% 28%, rgba(255,255,255,.20), rgba(255,255,255,0) 46%),' +
+          'radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 58%, rgba(0,0,0,.22) 84%, rgba(0,0,0,.42) 100%)',
+      },
+    }) : null
   );
 }
 
