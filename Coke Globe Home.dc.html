@@ -69,16 +69,10 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 120px}
 /* Header modelled on coca-cola.com: a white bar with the wordmark and the links
    grouped together at the left, in bold sentence case rather than the condensed
    caps the rest of the page uses. The global link colour is tuned for the red
-   field below it, so the header has to state its own. */
-/* The bar floats: inset from the edges, rounded, riding over the hero rather
-   than capping it. Appearance lives here, not inline, so the scrolled state can
-   override it — an inline background would outrank any class. */
-header{background:#fff;border-radius:18px;box-shadow:0 2px 14px rgba(0,0,0,.14);
-  transition:background-color .25s ease,box-shadow .25s ease,backdrop-filter .25s ease}
-/* Past the first scroll it turns to glass. Not fully transparent: the links are
-   near-black and the hero behind them is deep red, which is unreadable. */
-header.scrolled{background:rgba(255,255,255,.62);backdrop-filter:blur(14px) saturate(1.5);
-  -webkit-backdrop-filter:blur(14px) saturate(1.5);box-shadow:0 6px 22px rgba(0,0,0,.2)}
+   field below it, so the header has to state its own. Appearance lives here
+   rather than inline, because an inline background outranks any rule that a
+   responsive block might want to put on top of it. */
+header{background:#fff;border-bottom:1px solid rgba(0,0,0,.1)}
 header nav a{color:#111}
 header nav a:hover{color:#f40009}
 header :focus-visible{outline-color:#111}
@@ -139,8 +133,7 @@ footer :focus-visible{outline-color:#111}
   #stage{order:1}#regions{order:2}#stats{order:3}
 }
 @media (max-width:900px){
-  header{padding:11px 14px !important;gap:10px;margin:10px !important;top:10px !important;
-         border-radius:16px}
+  header{padding:12px 16px !important;gap:10px}
   /* The wordmark is cropped to its ink, so it is ~3x as wide as it is tall —
      full desktop height would crowd the CTA off a phone header. */
   header img{height:30px !important}
@@ -155,9 +148,9 @@ footer :focus-visible{outline-color:#111}
      it invisible rather than reported. */
   #burger{display:flex !important}
   header nav{display:none !important}
-  header nav.open{display:flex !important;position:absolute;top:calc(100% + 8px);left:0;right:0;
-    flex-direction:column;gap:0;background:#fff;padding:4px 20px 12px;border-radius:18px;
-    box-shadow:0 14px 30px rgba(0,0,0,.18)}
+  header nav.open{display:flex !important;position:absolute;top:100%;left:0;right:0;
+    flex-direction:column;gap:0;background:#fff;padding:4px 20px 12px;
+    border-bottom:1px solid rgba(0,0,0,.1);box-shadow:0 14px 30px rgba(0,0,0,.16)}
   header nav.open a{padding:14px 2px;border-top:1px solid rgba(0,0,0,.08)}
   h1{font-size:clamp(34px,9.5vw,64px) !important}
   #globe{padding:4px 16px 0 !important;min-height:0 !important}
@@ -217,7 +210,7 @@ footer :focus-visible{outline-color:#111}
 </sc-for>
 </div>
 
-<header class="{{ headerClass }}" style="position:sticky;top:14px;z-index:20;display:flex;align-items:center;gap:44px;margin:14px;padding:14px 28px;color:#111">
+<header style="position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:44px;padding:16px 48px;color:#111">
 <div style="display:flex;align-items:center;gap:12px;flex:none">
 <img src="logo.png" alt="Coca-Cola" style="height:34px;width:auto;display:block;filter:brightness(0)">
 <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.16em;font-size:11px;text-transform:uppercase;opacity:.5">Cheers To Us</span>
@@ -470,7 +463,6 @@ class Component extends DCLogic {
     region: "World",
     shared: false,
     menu: false,
-    scrolled: false,
     vw: typeof window !== "undefined" ? window.innerWidth : 1440,
     vh: typeof window !== "undefined" ? window.innerHeight : 900,
   };
@@ -507,22 +499,13 @@ class Component extends DCLogic {
       else return;
       e.preventDefault();
     };
-    // Passive, and it only touches state when the threshold is actually crossed
-    // — a setState per scroll event would re-render the page under the globe.
-    this._onScroll = () => {
-      const past = window.scrollY > 24;
-      if (past !== this.state.scrolled) this.setState({ scrolled: past });
-    };
     window.addEventListener("resize", this._onResize);
     window.addEventListener("keydown", this._onKey);
-    window.addEventListener("scroll", this._onScroll, { passive: true });
-    this._onScroll();
   }
 
   componentWillUnmount() {
     window.removeEventListener("resize", this._onResize);
     window.removeEventListener("keydown", this._onKey);
-    window.removeEventListener("scroll", this._onScroll);
     clearTimeout(this._shareTimer);
   }
 
@@ -655,7 +638,6 @@ class Component extends DCLogic {
       })),
       selected: sel != null,
       navClass: this.state.menu ? "open" : "",
-      headerClass: this.state.scrolled ? "scrolled" : "",
       menuOpen: this.state.menu ? "true" : "false",
       menuLabel: this.state.menu ? "Close menu" : "Open menu",
       toggleMenu: toggleMenu,

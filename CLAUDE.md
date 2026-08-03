@@ -91,12 +91,13 @@ photos — `photos/` has to sit next to it.
   are passed as values (`onClick="{{ handler }}"`), so they read their arguments
   off `e.currentTarget.dataset`.
 
-The header is a floating rounded bar, sticky, white at rest and glass once
-`state.scrolled` crosses 24px. Two traps: the page wrapper must stay
-`overflow:clip` and never go back to `overflow:hidden`, because that makes it a
-scroll container and the sticky header rides away with it — and the header's
-appearance lives in the `<helmet>` stylesheet rather than inline, since an
-inline background outranks the `.scrolled` class.
+The header is a white, edge-to-edge sticky bar. The page wrapper must stay
+`overflow:clip` and never go back to `overflow:hidden`: that makes it a scroll
+container, and the sticky header then sticks to *it* rather than the viewport
+and rides away as you scroll. The header's appearance lives in the `<helmet>`
+stylesheet rather than inline, because an inline background outranks anything a
+responsive block wants to put over it — the same trap that left the nav in the
+bar on phones and pushed the CTA off-screen.
 
 The rising bubbles are `#fizz`, a decorative layer behind the content: markup in
 the `<x-dc>` block, placement from `makeBubbles()` in `renderVals`, animation in
