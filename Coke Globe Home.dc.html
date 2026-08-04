@@ -244,8 +244,8 @@ footer .flocale{display:inline-flex;align-items:center;gap:8px;
 <div style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.16em;font-size:11px;text-transform:uppercase;opacity:.6">Moments shared</div>
 </div>
 <div>
-<div style="font-family:'Anton',sans-serif;font-size:44px;line-height:1">{{ countries }}</div>
-<div style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.16em;font-size:11px;text-transform:uppercase;opacity:.6">Countries</div>
+<div style="font-family:'Anton',sans-serif;font-size:44px;line-height:1">{{ states }}</div>
+<div style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.16em;font-size:11px;text-transform:uppercase;opacity:.6">States &amp; UTs</div>
 </div>
 <div style="font-family:'Barlow',sans-serif;font-size:14px;line-height:1.5;opacity:.7;text-wrap:pretty">Every square on the globe is a real moment someone shared over a Coke.</div>
 </div>
@@ -267,9 +267,9 @@ footer .flocale{display:inline-flex;align-items:center;gap:8px;
 </section>
 
 <section id="about" style="position:relative;z-index:4;padding:0 48px 40px">
-<div style="border-top:1px solid rgba(255,255,255,.18);padding-top:18px;display:grid;grid-template-columns:{{ aboutCols }};gap:18px 40px;align-items:start">
+<div style="border-top:1px solid rgba(255,255,255,.18);padding-top:18px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center">
 <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.18em;font-size:13px;text-transform:uppercase">About</span>
-<p style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.6;opacity:.78;margin:0;max-width:64ch;text-wrap:pretty">Cheers To Us is a living globe of real, everyday celebrations. Every photo holds a story, from birthdays and anniversaries to shift breaks and after-party laughs. Whether it’s after a long workday, a tough gym session, a hot summer afternoon, or a celebration with friends and family, Coke has a way of showing up in life’s most memorable moments. Spin the world, find a moment, and add your own. Because joy may look different everywhere, but it always feels like us.</p>
+<p style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.6;opacity:.78;margin:0;max-width:64ch;text-wrap:pretty">Cheers To Us is a living globe of real, everyday celebrations from across India. Every photo holds a story, from birthdays and anniversaries to shift breaks and after-party laughs. Whether it’s after a long workday, a tough gym session, a hot summer afternoon, or a celebration with friends and family, Coke has a way of showing up in life’s most memorable moments. Spin it, find a moment, and add your own. Because joy may look different in every corner of the country, but it always feels like us.</p>
 </div>
 </section>
 
@@ -338,64 +338,64 @@ footer .flocale{display:inline-flex;align-items:center;gap:8px;
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;sphereSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:900,&quot;min&quot;:560,&quot;max&quot;:1100,&quot;step&quot;:20,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;autoRotate&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
 const BASE = [
-  ["p1.webp", "Late night, first sip", "Asia", "The bar was packed. We found one table and stayed till close."],
-  ["p2.webp", "Birthday countdown", "Asia", "Nine of us, one bottle, and a very loud happy birthday."],
-  ["p3.webp", "Goa, mid-afternoon", "Asia", "Surf shack table, cold bottles, nobody in a hurry."],
-  ["p4.webp", "Cheers in the canteen", "Asia", "Cans up before the shift started again."],
-  ["p5.webp", "Matching shirts, obviously", "Asia", "We agreed on orange. We did not agree on anything else."],
-  ["p6.webp", "Beach bench", "Asia", "Flowers in our hair and the sea right behind us."],
-  ["p7.webp", "Comedy night", "Asia", "Family show, family round."],
-  ["p8.webp", "The usual spot", "Asia", "Five of us, same table, every other Friday."],
-  ["p9.webp", "Fairy lights and steps", "Asia", "The stairs became the best seats in the house."],
-  ["p10.webp", "Kitchen table catch-up", "Asia", "Cousins, cans, and a table that has heard everything."],
-  ["p11.webp", "Cheers from Africa", "Africa", "One of the moments shared for Cheers To Us."],
-  ["p12.webp", "Cheers from North America", "North America", "One of the moments shared for Cheers To Us."],
-  ["p13.webp", "Cheers from Africa", "Africa", "One of the moments shared for Cheers To Us."],
-  ["p14.webp", "Cheers from Europe", "Europe", "One of the moments shared for Cheers To Us."],
-  ["p15.webp", "Cheers from Asia", "Asia", "One of the moments shared for Cheers To Us."],
-  ["p16.webp", "Cheers from Europe", "Europe", "One of the moments shared for Cheers To Us."],
-  ["p17.webp", "Cheers from North America", "North America", "One of the moments shared for Cheers To Us."],
-  ["p18.webp", "Cheers from Europe", "Europe", "One of the moments shared for Cheers To Us."],
-  ["p19.webp", "Cheers from North America", "North America", "One of the moments shared for Cheers To Us."],
-  ["p20.webp", "Cheers from Asia", "Asia", "One of the moments shared for Cheers To Us."],
-  ["p21.webp", "Cheers from Africa", "Africa", "One of the moments shared for Cheers To Us."],
-  ["p22.webp", "Cheers from Asia", "Asia", "One of the moments shared for Cheers To Us."],
-  ["p23.webp", "Cheers from Europe", "Europe", "One of the moments shared for Cheers To Us."],
-  ["p24.webp", "Cheers from Africa", "Africa", "One of the moments shared for Cheers To Us."],
-  ["p25.webp", "Cheers from South America", "South America", "One of the moments shared for Cheers To Us."],
-  ["p26.webp", "Cheers from Europe", "Europe", "One of the moments shared for Cheers To Us."],
-  ["p27.webp", "Cheers from Africa", "Africa", "One of the moments shared for Cheers To Us."],
-  ["p28.webp", "Cheers from Africa", "Africa", "One of the moments shared for Cheers To Us."],
-  ["p29.webp", "Cheers from North America", "North America", "One of the moments shared for Cheers To Us."],
-  ["p30.webp", "Cheers from Africa", "Africa", "One of the moments shared for Cheers To Us."],
-  ["p31.webp", "Cheers from North America", "North America", "One of the moments shared for Cheers To Us."],
-  ["p32.webp", "Cheers from Europe", "Europe", "One of the moments shared for Cheers To Us."],
-  ["p33.webp", "Cheers from Europe", "Europe", "One of the moments shared for Cheers To Us."],
-  ["p34.webp", "Cheers from Europe", "Europe", "One of the moments shared for Cheers To Us."],
-  ["p35.webp", "Cheers from Asia", "Asia", "One of the moments shared for Cheers To Us."],
-  ["p36.webp", "Cheers from North America", "North America", "One of the moments shared for Cheers To Us."],
-  ["p37.webp", "Cheers from Europe", "Europe", "One of the moments shared for Cheers To Us."],
-  ["p38.webp", "Cheers from Africa", "Africa", "One of the moments shared for Cheers To Us."],
-  ["p39.webp", "Cheers from Europe", "Europe", "One of the moments shared for Cheers To Us."],
-  ["p40.webp", "Cheers from Asia", "Asia", "One of the moments shared for Cheers To Us."],
-  ["p41.webp", "Cheers from South America", "South America", "One of the moments shared for Cheers To Us."],
-  ["p42.webp", "Cheers from Africa", "Africa", "One of the moments shared for Cheers To Us."],
-  ["p43.webp", "Cheers from South America", "South America", "One of the moments shared for Cheers To Us."],
-  ["p44.webp", "Cheers from Asia", "Asia", "One of the moments shared for Cheers To Us."],
-  ["p45.webp", "Cheers from Europe", "Europe", "One of the moments shared for Cheers To Us."],
-  ["p46.webp", "Cheers from Asia", "Asia", "One of the moments shared for Cheers To Us."],
-  ["p47.webp", "Cheers from South America", "South America", "One of the moments shared for Cheers To Us."],
-  ["p48.webp", "Cheers from North America", "North America", "One of the moments shared for Cheers To Us."],
-  ["p49.webp", "Cheers from Asia", "Asia", "One of the moments shared for Cheers To Us."],
-  ["p50.webp", "Cheers from North America", "North America", "One of the moments shared for Cheers To Us."],
-  ["p51.webp", "Cheers from South America", "South America", "One of the moments shared for Cheers To Us."],
-  ["p52.webp", "Cheers from South America", "South America", "One of the moments shared for Cheers To Us."],
-  ["p53.webp", "Cheers from South America", "South America", "One of the moments shared for Cheers To Us."],
-  ["p54.webp", "Cheers from North America", "North America", "One of the moments shared for Cheers To Us."],
-  ["p55.webp", "Cheers from Asia", "Asia", "One of the moments shared for Cheers To Us."],
-  ["p56.webp", "Cheers from South America", "South America", "One of the moments shared for Cheers To Us."],
-  ["p57.webp", "Cheers from Africa", "Africa", "One of the moments shared for Cheers To Us."],
-  ["p58.webp", "Cheers from South America", "South America", "One of the moments shared for Cheers To Us."],
+  ["p1.webp", "Late night, first sip", "North India", "The bar was packed. We found one table and stayed till close."],
+  ["p2.webp", "Birthday countdown", "South India", "Nine of us, one bottle, and a very loud happy birthday."],
+  ["p3.webp", "Goa, mid-afternoon", "West India", "Surf shack table, cold bottles, nobody in a hurry."],
+  ["p4.webp", "Cheers in the canteen", "East India", "Cans up before the shift started again."],
+  ["p5.webp", "Matching shirts, obviously", "Northeast", "We agreed on orange. We did not agree on anything else."],
+  ["p6.webp", "Beach bench", "North India", "Flowers in our hair and the sea right behind us."],
+  ["p7.webp", "Comedy night", "South India", "Family show, family round."],
+  ["p8.webp", "The usual spot", "West India", "Five of us, same table, every other Friday."],
+  ["p9.webp", "Fairy lights and steps", "East India", "The stairs became the best seats in the house."],
+  ["p10.webp", "Kitchen table catch-up", "Northeast", "Cousins, cans, and a table that has heard everything."],
+  ["p11.webp", "Cheers from North India", "North India", "One of the moments shared for Cheers To Us."],
+  ["p12.webp", "Cheers from South India", "South India", "One of the moments shared for Cheers To Us."],
+  ["p13.webp", "Cheers from West India", "West India", "One of the moments shared for Cheers To Us."],
+  ["p14.webp", "Cheers from East India", "East India", "One of the moments shared for Cheers To Us."],
+  ["p15.webp", "Cheers from Northeast", "Northeast", "One of the moments shared for Cheers To Us."],
+  ["p16.webp", "Cheers from North India", "North India", "One of the moments shared for Cheers To Us."],
+  ["p17.webp", "Cheers from South India", "South India", "One of the moments shared for Cheers To Us."],
+  ["p18.webp", "Cheers from West India", "West India", "One of the moments shared for Cheers To Us."],
+  ["p19.webp", "Cheers from East India", "East India", "One of the moments shared for Cheers To Us."],
+  ["p20.webp", "Cheers from Northeast", "Northeast", "One of the moments shared for Cheers To Us."],
+  ["p21.webp", "Cheers from North India", "North India", "One of the moments shared for Cheers To Us."],
+  ["p22.webp", "Cheers from South India", "South India", "One of the moments shared for Cheers To Us."],
+  ["p23.webp", "Cheers from West India", "West India", "One of the moments shared for Cheers To Us."],
+  ["p24.webp", "Cheers from East India", "East India", "One of the moments shared for Cheers To Us."],
+  ["p25.webp", "Cheers from Northeast", "Northeast", "One of the moments shared for Cheers To Us."],
+  ["p26.webp", "Cheers from North India", "North India", "One of the moments shared for Cheers To Us."],
+  ["p27.webp", "Cheers from South India", "South India", "One of the moments shared for Cheers To Us."],
+  ["p28.webp", "Cheers from West India", "West India", "One of the moments shared for Cheers To Us."],
+  ["p29.webp", "Cheers from East India", "East India", "One of the moments shared for Cheers To Us."],
+  ["p30.webp", "Cheers from Northeast", "Northeast", "One of the moments shared for Cheers To Us."],
+  ["p31.webp", "Cheers from North India", "North India", "One of the moments shared for Cheers To Us."],
+  ["p32.webp", "Cheers from South India", "South India", "One of the moments shared for Cheers To Us."],
+  ["p33.webp", "Cheers from West India", "West India", "One of the moments shared for Cheers To Us."],
+  ["p34.webp", "Cheers from East India", "East India", "One of the moments shared for Cheers To Us."],
+  ["p35.webp", "Cheers from Northeast", "Northeast", "One of the moments shared for Cheers To Us."],
+  ["p36.webp", "Cheers from North India", "North India", "One of the moments shared for Cheers To Us."],
+  ["p37.webp", "Cheers from South India", "South India", "One of the moments shared for Cheers To Us."],
+  ["p38.webp", "Cheers from West India", "West India", "One of the moments shared for Cheers To Us."],
+  ["p39.webp", "Cheers from East India", "East India", "One of the moments shared for Cheers To Us."],
+  ["p40.webp", "Cheers from Northeast", "Northeast", "One of the moments shared for Cheers To Us."],
+  ["p41.webp", "Cheers from North India", "North India", "One of the moments shared for Cheers To Us."],
+  ["p42.webp", "Cheers from South India", "South India", "One of the moments shared for Cheers To Us."],
+  ["p43.webp", "Cheers from West India", "West India", "One of the moments shared for Cheers To Us."],
+  ["p44.webp", "Cheers from East India", "East India", "One of the moments shared for Cheers To Us."],
+  ["p45.webp", "Cheers from Northeast", "Northeast", "One of the moments shared for Cheers To Us."],
+  ["p46.webp", "Cheers from North India", "North India", "One of the moments shared for Cheers To Us."],
+  ["p47.webp", "Cheers from South India", "South India", "One of the moments shared for Cheers To Us."],
+  ["p48.webp", "Cheers from West India", "West India", "One of the moments shared for Cheers To Us."],
+  ["p49.webp", "Cheers from East India", "East India", "One of the moments shared for Cheers To Us."],
+  ["p50.webp", "Cheers from Northeast", "Northeast", "One of the moments shared for Cheers To Us."],
+  ["p51.webp", "Cheers from North India", "North India", "One of the moments shared for Cheers To Us."],
+  ["p52.webp", "Cheers from South India", "South India", "One of the moments shared for Cheers To Us."],
+  ["p53.webp", "Cheers from West India", "West India", "One of the moments shared for Cheers To Us."],
+  ["p54.webp", "Cheers from East India", "East India", "One of the moments shared for Cheers To Us."],
+  ["p55.webp", "Cheers from Northeast", "Northeast", "One of the moments shared for Cheers To Us."],
+  ["p56.webp", "Cheers from North India", "North India", "One of the moments shared for Cheers To Us."],
+  ["p57.webp", "Cheers from South India", "South India", "One of the moments shared for Cheers To Us."],
+  ["p58.webp", "Cheers from West India", "West India", "One of the moments shared for Cheers To Us."],
 ];
 
 function makeImages(n) {
@@ -418,7 +418,10 @@ function makeImages(n) {
   return out;
 }
 
-const REGIONS = ["World", "Asia", "Europe", "North America", "South America", "Africa"];
+// India only. ALL is the unfiltered sentinel the way "World" used to be — it is
+// not a value any photo carries, so it can't collide with a real zone name.
+const ALL = "All India";
+const REGIONS = [ALL, "North India", "South India", "West India", "East India", "Northeast"];
 
 // Fizz. Deterministic rather than random, so a resize re-render doesn't
 // reshuffle the bubbles under the viewer. The negative delays start each one
@@ -447,7 +450,7 @@ class Component extends DCLogic {
     // every photo once: the globe has more facets than that and cycles them
     images: makeImages(BASE.length),
     sel: null,
-    region: "World",
+    region: ALL,
     shared: false,
     menu: false,
     vw: typeof window !== "undefined" ? window.innerWidth : 1440,
@@ -529,7 +532,7 @@ class Component extends DCLogic {
   // filter actually filters instead of only highlighting a pill.
   shown() {
     const imgs = this.state.images;
-    return this.state.region === "World" ? imgs : imgs.filter((m) => m.region === this.state.region);
+    return this.state.region === ALL ? imgs : imgs.filter((m) => m.region === this.state.region);
   }
 
   pick = (i) => {
@@ -546,7 +549,7 @@ class Component extends DCLogic {
     const sel = this.state.sel == null ? null : imgs[this.state.sel];
     const regions = REGIONS.map((name) => {
       const active = this.state.region === name;
-      const count = name === "World" ? all.length : all.filter((m) => m.region === name).length;
+      const count = name === ALL ? all.length : all.filter((m) => m.region === name).length;
       return {
         name, count,
         bg: active ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.06)",
@@ -561,8 +564,8 @@ class Component extends DCLogic {
     });
     // Four cards, each from a different region where the filter allows it.
     // Fixed indices used to land on the first rows of BASE every time, so the
-    // row read "Asia, Asia, Asia, Asia" however much of the world was on the
-    // globe. Falls back to evenly spaced picks once the regions run out — which
+    // row read "North India, North India, ..." however many zones were on
+    // the globe. Falls back to evenly spaced picks once the regions run out — which
     // is what happens as soon as you filter down to one of them.
     const feat = [];
     const seen = new Set();
@@ -584,7 +587,7 @@ class Component extends DCLogic {
     const closeMenu = () => { if (this.state.menu) this.setState({ menu: false }); };
     const pickRegion = (e) => {
       const name = e.currentTarget.dataset.region;
-      const has = name === "World" || all.some((m) => m.region === name);
+      const has = name === ALL || all.some((m) => m.region === name);
       if (has) this.setState({ region: name, sel: null });
     };
     return {
@@ -598,10 +601,9 @@ class Component extends DCLogic {
       // a layer, and the globe is already the expensive thing on that screen
       bubbles: makeBubbles(vw < 700 ? 18 : 36),
       total: "1,264",
-      countries: 64,
+      states: 36,
       regionLabel: this.state.region,
       heroCols: wide ? "minmax(0,210px) minmax(0,1fr) minmax(0,210px)" : "minmax(0,1fr)",
-      aboutCols: wide ? "160px minmax(0,1fr)" : "minmax(0,1fr)",
       // Fit the globe to whichever runs out first, the stage or the viewport
       // height — there is no floor, so it stays on-screen down to a phone.
       sphereSize: Math.round(Math.max(240, Math.min(

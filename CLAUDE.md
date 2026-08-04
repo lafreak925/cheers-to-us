@@ -195,8 +195,12 @@ Consequences worth keeping in mind:
   (not JSX syntax) in `ImgSphere.jsx`, comments that explain *why* rather than
   restating the code.
 - The photo captions and region labels are real content — don't invent moments,
-  countries or provenance for them. Regions with no moments render dimmed and
+  places or provenance for them. Regions with no moments render dimmed and
   inert rather than filtering to an empty globe.
+- **The site is India-only.** `REGIONS` is the five Indian zones plus `ALL`
+  (`"All India"`), the unfiltered sentinel that `shown()`, the counts and
+  `pickRegion` all test against — it is deliberately not a value any photo
+  carries. No continent, country or "world" framing in the copy.
 - Clickable elements are `<div role="button">`, so each needs `tabindex` and an
   `onKeyDown` (`this.key(fn)` wraps a click handler for Enter/Space). A div with
   only `onClick` is unreachable by keyboard.
