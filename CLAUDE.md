@@ -63,6 +63,30 @@ none of them are obvious from reading the code:
 | `photos/pN.webp` | 900px, quality 84 — what the modal and the featured row open. `tN.webp` are the 300px facet textures the globe wears. 58 of each. `BASE` carries the filename **with** its extension, so a mixed set needs no code change. |
 | `logo.png` | Coca-Cola wordmark in the header, keyed out of `full_Res_images/cocaCola.png` and cropped to its ink. Rendered white via a CSS `brightness(0) invert(1)`. |
 | `full_Res_images/` | 1280px source photos — **unused by the site**, nothing references them. `cocaCola.png` is the exception: it is the source `logo.png` was derived from, not a photo. |
+| `video/` | AI-generated globe loops — **not wired into the page**, nothing references them yet. See "Generated globe video" below. |
+
+## Generated globe video
+
+`video/globe-loop.*` (4.0s) and `video/globe-loop-slow.*` (8.9s) are 900×900
+turntable loops made with Higgsfield from a still of the real globe, plus
+`globe-poster.jpg` as a first frame. Both are seamless: the model does not
+honour `end_image`, so the last second is cross-dissolved back over the first
+with `xfade` and then dropped.
+
+Two things to know before using them:
+
+- **The photos in the video are not your photos.** The model repaints every
+  facet, so faces and bottles are invented. Fine as ambient motion, wrong
+  anywhere a viewer would read them as real submissions.
+- **Seedance rejects the source frame; Kling accepts it.** Every `seedance_2_0*`
+  job with the globe still failed with no reason given, while the identical
+  call on `kling3_0` succeeded — an input filter, not a bad image. Failed jobs
+  are not charged, so alternate models are cheap to try.
+
+To re-shoot the source still: serve the site, load `index.html` in a same-origin
+iframe, centre `#stage div[style*="perspective"]` in the window, and screenshot
+with `--force-device-scale-factor=2`. Re-place the iframe on a timer — the globe
+is sized from the frame's viewport and the first measurement is not the final one.
 
 After changing `index.html`, `ImgSphere.jsx` or `support.js`, run
 `python3 build-standalone.py`, or the offline copy silently ships the old code.
