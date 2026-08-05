@@ -63,15 +63,37 @@ none of them are obvious from reading the code:
 | `photos/pN.webp` | 900px, quality 84 — what the modal and the featured row open. `tN.webp` are the 300px facet textures the globe wears. 58 of each. `BASE` carries the filename **with** its extension, so a mixed set needs no code change. |
 | `logo.png` | Coca-Cola wordmark in the header, keyed out of `full_Res_images/cocaCola.png` and cropped to its ink. Rendered white via a CSS `brightness(0) invert(1)`. |
 | `full_Res_images/` | 1280px source photos — **unused by the site**, nothing references them. `cocaCola.png` is the exception: it is the source `logo.png` was derived from, not a photo. |
-| `video/` | AI-generated globe loops — **not wired into the page**, nothing references them yet. See "Generated globe video" below. |
+| `video/` | AI-generated globe loops. `globe-phone.*` is what phones play instead of the globe; the rest are masters. See "Generated globe video" below. |
 
 ## Generated globe video
 
-`video/globe-loop.*` (4.0s) and `video/globe-loop-slow.*` (8.9s) are 900×900
-turntable loops made with Higgsfield from a still of the real globe, plus
-`globe-poster.jpg` as a first frame. Both are seamless: the model does not
-honour `end_image`, so the last second is cross-dissolved back over the first
-with `xfade` and then dropped.
+**Under 700px the globe is a video, not `ImgSphere`.** `renderVals` sets
+`liveGlobe`/`videoGlobe` off that breakpoint and the two `<sc-if>` blocks in
+`#stage` pick one. The phone then fetches no facet textures at all — ~490KB of
+video and poster against the ~476KB of `t*.webp` it used to pull, for none of
+the per-frame compositing, which was the half that was actually felt.
+
+What that costs: the video does not answer the region filter, and it cannot be
+spun or tapped, so on a phone the featured cards are the only way into a moment.
+The hint row under the globe swaps its copy to match.
+
+`video/globe-loop.*` (4.0s) and `video/globe-loop-slow.*` (8.9s) are the 900×900
+masters; `globe-phone.*` is the 720×720 cut the page plays. All are seamless:
+the model does not honour `end_image`, so the last second is cross-dissolved
+back over the first with `xfade` and then dropped.
+
+Two traps, both already paid for:
+
+- **Don't bake a backdrop into the clip.** The page behind the globe is a radial
+  gradient, not flat `#5d0a12`, so a matted background reads as a square patch
+  whatever colour you pick. `#globevid` is masked to a circle instead and the
+  real gradient shows through. That mask needs `closest-side` — a bare `circle`
+  sizes to farthest-*corner*, making 100% ~1.41x larger, which crops the globe
+  rather than the corners.
+- **Give the `<video>` flags explicit values.** `autoPlay muted loop playsInline`
+  written bare parse to `""`, which is falsy, so nothing autoplays and nothing
+  loops — and the bundler's CAMEL rewrite only matches `name=`, so the offline
+  copy would drop them silently. They are written as `{{ true }}`.
 
 Two things to know before using them:
 

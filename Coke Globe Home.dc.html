@@ -44,6 +44,15 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 120px}
    and the main thread never touches them; that matters here because the globe
    already owns the main thread. Count comes from renderVals, so a phone gets
    fewer. */
+/* The phone globe is a video, and its red field is the model's, not ours — the
+   page behind it is a radial gradient, so any baked-in backdrop reads as a
+   square patch. Mask the clip to a circle just outside the sphere instead and
+   let the real gradient show through. The sphere's own silhouette reaches 49.1%
+   of the frame, so the solid stop has to reach it. `closest-side` is load-bearing:
+   a bare `circle` sizes to farthest-*corner*, which makes 100% ~1.41x larger and
+   quietly crops the globe instead of the corners. */
+#globevid{-webkit-mask-image:radial-gradient(circle closest-side at 49.8% 50.8%,#000 100%,transparent 116%);
+  mask-image:radial-gradient(circle closest-side at 49.8% 50.8%,#000 100%,transparent 116%)}
 #fizz{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
 #fizz span{position:absolute;border-radius:50%;opacity:0;
   background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.92),rgba(255,255,255,.3) 42%,rgba(255,255,255,.04) 72%);
@@ -231,10 +240,21 @@ footer .flocale{display:inline-flex;align-items:center;gap:8px;
 <div style="font-family:'Barlow',sans-serif;font-size:19px;opacity:.85">Celebrate it with a Coke.</div>
 </div>
 
+<sc-if value="{{ liveGlobe }}" hint-placeholder-val="{{ true }}">
 <x-import component-from-global-scope="ImgSphere" from="./ImgSphere.jsx" images="{{ images }}" size="{{ sphereSize }}" onSelect="{{ selectMoment }}" autoRotate="{{ autoRotate }}" hint-size="560px,560px"></x-import>
+</sc-if>
+
+<sc-if value="{{ videoGlobe }}">
+<video id="globevid" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" preload="metadata" poster="video/globe-phone-poster.jpg" aria-label="The globe of moments, turning" style="width:{{ sphereSize }}px;height:{{ sphereSize }}px;max-width:100%;display:block;flex:none">
+<source src="video/globe-phone.webm" type="video/webm">
+<source src="video/globe-phone.mp4" type="video/mp4">
+</video>
+</sc-if>
 
 <div style="display:flex;align-items:center;gap:16px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.14em;font-size:11px;text-transform:uppercase;opacity:.6;margin-top:-6px">
-<span>Drag to rotate</span><span style="opacity:.4">|</span><span>Scroll to zoom</span><span style="opacity:.4">|</span><span>Click a moment</span>
+<sc-for list="{{ globeHints }}" as="hint" hint-placeholder-count="3">
+<span style="opacity:{{ hint.op }}">{{ hint.text }}</span>
+</sc-for>
 </div>
 </div>
 
@@ -590,13 +610,31 @@ class Component extends DCLogic {
       const has = name === ALL || all.some((m) => m.region === name);
       if (has) this.setState({ region: name, sel: null });
     };
+    // Under 700px the globe is a pre-rendered loop instead of 86 masked layers
+    // the compositor has to carry. Roughly the same bytes as the textures it
+    // replaces (~460KB against ~476KB) but none of the per-frame cost, which is
+    // the half that was actually felt on a phone. The trade is real: the video
+    // does not answer the region filter and cannot be spun or tapped, so the
+    // cards below are the only way into a moment on a small screen.
+    const phone = vw < 700;
+    const hints = phone
+      ? ["Real moments, shared", "Browse them below"]
+      : ["Drag to rotate", "Scroll to zoom", "Click a moment"];
+    // the separators are list items too, so the row stays one flat sc-for
+    const globeHints = [];
+    hints.forEach((text, i) => {
+      if (i) globeHints.push({ text: "|", op: ".4" });
+      globeHints.push({ text, op: "1" });
+    });
     return {
+      liveGlobe: !phone,
+      videoGlobe: phone,
+      globeHints,
       // A phone downloads one texture per distinct photo on the globe, and with
-      // 58 of them that is the biggest thing it fetches. The facets already
-      // repeat — 86 of them over this list — so on a small screen it wears every
-      // other photo and pays for half the textures. The filter, the cards and
-      // the modal all still run off the full set.
-      images: vw < 700 && imgs.length > 40 ? imgs.filter((_, i) => i % 2 === 0) : imgs,
+      // 58 of them that is the biggest thing it fetches. It wears the loop
+      // instead, so it fetches none of them; the filter, the cards and the
+      // modal all still run off the full set.
+      images: imgs,
       // half as many on a phone: they are compositor-only, but each one is still
       // a layer, and the globe is already the expensive thing on that screen
       bubbles: makeBubbles(vw < 700 ? 18 : 36),
