@@ -245,9 +245,9 @@ footer .flocale{display:inline-flex;align-items:center;gap:8px;
 </sc-if>
 
 <sc-if value="{{ videoGlobe }}">
-<video id="globevid" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" preload="metadata" poster="video/globe-phone-poster.jpg" aria-label="The globe of moments, turning" style="width:{{ sphereSize }}px;height:{{ sphereSize }}px;max-width:100%;display:block;flex:none">
-<source src="video/globe-phone.webm" type="video/webm">
-<source src="video/globe-phone.mp4" type="video/mp4">
+<video id="globevid" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" preload="metadata" poster="{{ globePoster }}" aria-label="The globe of moments, turning" style="width:{{ sphereSize }}px;height:{{ sphereSize }}px;max-width:100%;display:block;flex:none">
+<source src="{{ globeWebm }}" type="video/webm">
+<source src="{{ globeMp4 }}" type="video/mp4">
 </video>
 </sc-if>
 
@@ -440,6 +440,11 @@ function makeImages(n) {
 
 // India only. ALL is the unfiltered sentinel the way "World" used to be — it is
 // not a value any photo carries, so it can't collide with a real zone name.
+// The globe is a pre-rendered loop at every width, not a built sphere. Set this
+// to false to put the interactive ImgSphere back on desktop — nothing else has
+// to change; the markup carries both and `renderVals` picks one.
+const GLOBE_VIDEO = true;
+
 const ALL = "All India";
 const REGIONS = [ALL, "North India", "South India", "West India", "East India", "Northeast"];
 
@@ -610,14 +615,12 @@ class Component extends DCLogic {
       const has = name === ALL || all.some((m) => m.region === name);
       if (has) this.setState({ region: name, sel: null });
     };
-    // Under 700px the globe is a pre-rendered loop instead of 86 masked layers
-    // the compositor has to carry. Roughly the same bytes as the textures it
-    // replaces (~460KB against ~476KB) but none of the per-frame cost, which is
-    // the half that was actually felt on a phone. The trade is real: the video
-    // does not answer the region filter and cannot be spun or tapped, so the
-    // cards below are the only way into a moment on a small screen.
+    // The loop stands in for the built sphere: no 86 masked layers for the
+    // compositor to carry and no facet textures to fetch. The trade is real and
+    // sitewide — the video does not answer the region filter and cannot be spun
+    // or tapped, so the cards below are the only way into a moment.
     const phone = vw < 700;
-    const hints = phone
+    const hints = GLOBE_VIDEO
       ? ["Real moments, shared", "Browse them below"]
       : ["Drag to rotate", "Scroll to zoom", "Click a moment"];
     // the separators are list items too, so the row stays one flat sc-for
@@ -627,9 +630,14 @@ class Component extends DCLogic {
       globeHints.push({ text, op: "1" });
     });
     return {
-      liveGlobe: !phone,
-      videoGlobe: phone,
+      liveGlobe: !GLOBE_VIDEO,
+      videoGlobe: GLOBE_VIDEO,
       globeHints,
+      // A phone plays the 720px cut; anything wider gets the 900px master, which
+      // is the size the sphere is drawn at on a desktop anyway.
+      globeWebm: phone ? "video/globe-phone.webm" : "video/globe-loop.webm",
+      globeMp4: phone ? "video/globe-phone.mp4" : "video/globe-loop.mp4",
+      globePoster: phone ? "video/globe-phone-poster.jpg" : "video/globe-poster.jpg",
       // A phone downloads one texture per distinct photo on the globe, and with
       // 58 of them that is the biggest thing it fetches. It wears the loop
       // instead, so it fetches none of them; the filter, the cards and the

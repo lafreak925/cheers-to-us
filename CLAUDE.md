@@ -67,15 +67,21 @@ none of them are obvious from reading the code:
 
 ## Generated globe video
 
-**Under 700px the globe is a video, not `ImgSphere`.** `renderVals` sets
-`liveGlobe`/`videoGlobe` off that breakpoint and the two `<sc-if>` blocks in
-`#stage` pick one. The phone then fetches no facet textures at all — ~490KB of
-video and poster against the ~476KB of `t*.webp` it used to pull, for none of
-the per-frame compositing, which was the half that was actually felt.
+**The globe is a video at every width, not `ImgSphere`.** `GLOBE_VIDEO` (top of
+the logic block) drives `liveGlobe`/`videoGlobe`, and the two `<sc-if>` blocks in
+`#stage` pick one. Set it to `false` and the interactive sphere comes back with
+no other edit — the markup and the logic both still carry it. Phones play the
+720px cut, wider screens the 900px master.
 
-What that costs: the video does not answer the region filter, and it cannot be
-spun or tapped, so on a phone the featured cards are the only way into a moment.
-The hint row under the globe swaps its copy to match.
+Nothing now fetches a facet texture: 58 `t*.webp` became one ~1MB video on
+desktop and ~490KB on a phone, and the compositor stopped carrying 86 masked
+layers.
+
+What that costs, and it is the whole interaction: the video does not answer the
+region filter, and it cannot be spun, zoomed or tapped. The featured cards are
+the only way into a moment now, at any size. The hint row says so instead of
+offering to rotate. `ImgSphere.jsx` is still fetched (the runtime resolves
+`x-import` regardless of the `sc-if`) but never renders.
 
 `video/globe-loop.*` (4.0s) and `video/globe-loop-slow.*` (8.9s) are the 900×900
 masters; `globe-phone.*` is the 720×720 cut the page plays. All are seamless:
