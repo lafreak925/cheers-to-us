@@ -44,8 +44,10 @@ none of them are obvious from reading the code:
 - **Keyboard.** Tab to a featured card, Enter opens the modal; Space on Next
   advances; Enter on Close closes; Esc and arrows work from anywhere.
 - **Touch.** Vertical swipe on the globe scrolls the page, horizontal spins it,
-  a tap opens a moment. Note raw CDP `Input.dispatchTouchEvent` does not
-  synthesise a click — use a real tap gesture or you'll chase a phantom bug.
+  a tap opens a moment. A CDP `touchStart`/`touchEnd` pair *does* synthesise the
+  click and does open the modal, provided touch emulation is on
+  (`Emulation.setTouchEmulationEnabled` + `setDeviceMetricsOverride`
+  `mobile: true`) — without that the taps land but nothing selects.
 - **The offline bundle**, with all non-`file://` requests aborted.
 
 ## Layout of the code
@@ -96,6 +98,36 @@ To re-shoot the source still: serve the site, load `index.html` in a same-origin
 iframe, centre `#stage div[style*="perspective"]` in the window, and screenshot
 with `--force-device-scale-factor=2`. Re-place the iframe on a timer — the globe
 is sized from the frame's viewport and the first measurement is not the final one.
+
+## The phone's idle spin
+
+Under 520px (`cssSpin` in `ImgSphere.jsx`) the globe idles on a CSS animation
+rather than the rAF loop, so nothing runs per frame while no finger is on it.
+Every touch hands the transform back and forth between the two, and **the
+hand-back is where this breaks**: the loop leaves an inline `transform` on the
+container, so if the animation does not come back the globe sits frozen on the
+last angle the loop wrote — which reads as "it stops spinning after one tap".
+
+Three things keep that from happening, all in `attachSpin`/`detachSpin`:
+
+- `detachSpin` writes the animation's current angle inline *before* dropping the
+  animation. Without it the globe snaps to its base rotation for the one frame
+  before the loop's first write.
+- `attachSpin` clears the inline transform, so the keyframes are the only thing
+  driving the element and a failure to restart is visible rather than silent.
+- The restart is `animation: none` → forced reflow → the value. Assigning over
+  the top is not enough: the computed value can go `none` → the same string
+  within one style pass, and an unchanged value is not a new animation.
+
+There is also a latch, `spinDead`. One frame after attaching, if
+`el.getAnimations()` is empty the browser has refused the animation outright, so
+the globe stops being offered back to it and the rAF loop carries the idle spin
+for the rest of the page's life. It still skips the depth pass, so the cost is
+one container transform a frame — the same work the keyframes were doing.
+
+To test the refusal path, plant an empty `<style id="imgsphere-spin">` before
+the component mounts: its injector is guarded on that id, so it skips, and
+`animation-name` then resolves to no keyframes at all.
 
 After changing `index.html`, `ImgSphere.jsx` or `support.js`, run
 `python3 build-standalone.py`, or the offline copy silently ships the old code.

@@ -75,6 +75,9 @@ function ImgSphere(props) {
   const spinFrom = useRef(0);   // angle the CSS animation was handed
   const spinAt = useRef(0);     // when it was handed over
   const spinning = useRef(false);
+  // Latched once the compositor has refused the animation, so the globe stops
+  // being offered back to it — see the tail of attachSpin.
+  const spinDead = useRef(false);
   const loopCtl = useRef(null);
   // The depth pass is the expensive half of the loop, and it only feeds shading
   // and stacking — nothing positional — so a phone can run it every third frame.
@@ -241,21 +244,62 @@ function ImgSphere(props) {
   const attachSpin = useCallback(() => {
     const el = innerRef.current;
     if (!el || !autoRotate) return;
+    // Already established that this browser will not keep the animation: the
+    // loop is the only thing that turns the globe from here on.
+    if (spinDead.current) {
+      if (loopCtl.current) loopCtl.current.start();
+      return;
+    }
     const y = ((rot.current.y % 360) + 360) % 360;
     el.style.setProperty('--sx', rot.current.x + 'deg');
-    // negative delay: the animation resumes at the angle the drag left it on
+    // Hand the transform back to the keyframes. The loop leaves an inline
+    // transform behind on every touch, and an inline value is exactly what the
+    // globe sits frozen on if the animation does not come back — the element
+    // keeps the last angle the loop wrote and nothing ever moves it again. With
+    // it cleared the keyframes are the only thing driving this element, so a
+    // failure to restart is visible here rather than silent on a phone.
+    el.style.transform = '';
+    // Restart deliberately rather than by assignment. Going 'none' -> the same
+    // string can land in one style pass, and a computed value that never
+    // changed is not a new animation: the engine is entitled to carry on with
+    // the old one, or to drop it. The reflow between the two writes forces the
+    // restart. It costs one layout per hand-back — once per touch, not per
+    // frame — which is why it can sit on the phone path at all.
+    el.style.animation = 'none';
+    void el.offsetWidth;
     el.style.animation = 'imgsphere-spin ' + spinPeriod + 's linear infinite';
+    // negative delay: the animation resumes at the angle the drag left it on
     el.style.animationDelay = -(y / 360) * spinPeriod + 's';
     spinFrom.current = y;
     spinAt.current = performance.now();
     spinning.current = true;
+    // Last resort. If the animation still is not running a frame later, the
+    // globe would be stopped for good, so drive it from the loop instead: the
+    // per-frame cost is the thing cssSpin exists to avoid, but a globe that
+    // turns costs less than one that does not.
+    requestAnimationFrame(() => {
+      if (!spinning.current || !innerRef.current) return;
+      const live = typeof el.getAnimations === 'function' && el.getAnimations().length > 0;
+      if (!live) {
+        spinning.current = false;
+        spinDead.current = true;
+        if (loopCtl.current) loopCtl.current.start();
+      }
+    });
   }, [autoRotate, spinPeriod]);
 
   const detachSpin = useCallback(() => {
     const el = innerRef.current;
     if (!el) return;
-    rot.current.y = spinAngle();
+    const y = spinAngle();
+    rot.current.y = y;
     spinning.current = false;
+    // Pin the angle the animation had reached before dropping it. Removing the
+    // animation with nothing inline leaves the element on its base transform
+    // until the loop's first frame writes one, which reads as a snap back to
+    // where the globe started every time a finger lands on it.
+    el.style.transform =
+      'translateZ(0) scale(' + zoom.current + ') rotateX(' + rot.current.x + 'deg) rotateY(' + y + 'deg)';
     el.style.animation = 'none';
   }, [spinAngle]);
 
@@ -287,7 +331,11 @@ function ImgSphere(props) {
       // the globe is still again the CSS animation takes it back and the loop
       // stops outright — no script runs per frame while it idles.
       if (cssSpin) {
-        if (!drag.current && !v.x && !v.y) {
+        // Once the animation has been refused there is nothing to hand back to,
+        // so the loop stays up and carries the idle spin itself. It still skips
+        // the depth pass below, which is the expensive half — this costs one
+        // container transform a frame, the same work the keyframes were doing.
+        if (!spinDead.current && !drag.current && !v.x && !v.y) {
           attachSpin();
           raf = 0;
           return;
@@ -339,7 +387,9 @@ function ImgSphere(props) {
     if (cssSpin) attachSpin(); else start();
     const onVis = () => {
       if (document.hidden) stop();
-      else if (!cssSpin || drag.current) start();
+      // spinDead means the loop is carrying the idle spin, so it has to come
+      // back with the tab — there is no animation waiting to take over.
+      else if (!cssSpin || spinDead.current || drag.current) start();
     };
     document.addEventListener('visibilitychange', onVis);
     return () => {
