@@ -63,46 +63,27 @@ none of them are obvious from reading the code:
 | `photos/pN.webp` | 900px, quality 84 — what the modal and the featured row open. `tN.webp` are the 300px facet textures the globe wears. 58 of each. `BASE` carries the filename **with** its extension, so a mixed set needs no code change. |
 | `logo.png` | Coca-Cola wordmark in the header, keyed out of `full_Res_images/cocaCola.png` and cropped to its ink. Rendered white via a CSS `brightness(0) invert(1)`. |
 | `full_Res_images/` | 1280px source photos — **unused by the site**, nothing references them. `cocaCola.png` is the exception: it is the source `logo.png` was derived from, not a photo. |
-| `video/` | AI-generated globe loops. `globe-phone.*` is what phones play instead of the globe; the rest are masters. See "Generated globe video" below. |
+| `video/` | AI-generated globe loops — **not wired into the page**, nothing references them yet. See "Generated globe video" below. |
 
 ## Generated globe video
 
-**The globe is a video at every width, not `ImgSphere`.** `GLOBE_VIDEO` (top of
-the logic block) drives `liveGlobe`/`videoGlobe`, and the two `<sc-if>` blocks in
-`#stage` pick one. Set it to `false` and the interactive sphere comes back with
-no other edit — the markup and the logic both still carry it. Phones play the
-720px cut, wider screens the 900px master.
+`video/globe-loop.*` (4.0s) and `video/globe-loop-slow.*` (8.9s) are 900×900
+turntable loops made with Higgsfield from a still of the real globe, plus
+`globe-poster.jpg` as a first frame. `globe-phone.*` is a 720×720 cut of the
+master. All are seamless: the model does not honour `end_image`, so the last
+second is cross-dissolved back over the first with `xfade` and then dropped.
 
-Nothing now fetches a facet texture: 58 `t*.webp` became one ~1MB video on
-desktop and ~490KB on a phone, and the compositor stopped carrying 86 masked
-layers.
+**These were wired in as the globe and then reverted — don't re-try it.** The
+loop stood in for `ImgSphere` (phones first, then every width) to save the 86
+masked layers and the facet textures. It was reverted on sight: the clip reads
+as visibly worse than the rendered globe and does not turn a full revolution.
+The performance win does not buy back the look, and it cost the whole
+interaction — the video answers no region filter and cannot be spun or tapped.
 
-What that costs, and it is the whole interaction: the video does not answer the
-region filter, and it cannot be spun, zoomed or tapped. The featured cards are
-the only way into a moment now, at any size. The hint row says so instead of
-offering to rotate. `ImgSphere.jsx` is still fetched (the runtime resolves
-`x-import` regardless of the `sc-if`) but never renders.
+Three things to know before using them:
 
-`video/globe-loop.*` (4.0s) and `video/globe-loop-slow.*` (8.9s) are the 900×900
-masters; `globe-phone.*` is the 720×720 cut the page plays. All are seamless:
-the model does not honour `end_image`, so the last second is cross-dissolved
-back over the first with `xfade` and then dropped.
-
-Two traps, both already paid for:
-
-- **Don't bake a backdrop into the clip.** The page behind the globe is a radial
-  gradient, not flat `#5d0a12`, so a matted background reads as a square patch
-  whatever colour you pick. `#globevid` is masked to a circle instead and the
-  real gradient shows through. That mask needs `closest-side` — a bare `circle`
-  sizes to farthest-*corner*, making 100% ~1.41x larger, which crops the globe
-  rather than the corners.
-- **Give the `<video>` flags explicit values.** `autoPlay muted loop playsInline`
-  written bare parse to `""`, which is falsy, so nothing autoplays and nothing
-  loops — and the bundler's CAMEL rewrite only matches `name=`, so the offline
-  copy would drop them silently. They are written as `{{ true }}`.
-
-Two things to know before using them:
-
+- **The loop does not complete a revolution.** The turntable drifts less than a
+  full turn before it wraps, so it never reads as a globe that spins.
 - **The photos in the video are not your photos.** The model repaints every
   facet, so faces and bottles are invented. Fine as ambient motion, wrong
   anywhere a viewer would read them as real submissions.

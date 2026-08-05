@@ -5,7 +5,7 @@ standalone-offline.html is the double-clickable copy of the page: the dc runtime
 React, ReactDOM, Babel and the webfonts are all inlined into it, so it opens from
 file:// with no server and no network. (index.html can't — a file:// page is not
 allowed to fetch ./ImgSphere.jsx.) The photos are NOT inlined; keep the photos/
-folder next to it — and the video/ folder too, which the phone globe plays from.
+folder next to it.
 
 The bundle carries its own unpacker plus two data blocks:
   __bundler/manifest  {uuid: {mime, compressed, data(base64)}}
@@ -31,7 +31,7 @@ TEMPLATE_TAG = '<script type="__bundler/template">'
 
 # Attributes the runtime needs case-preserved. DOMParser lowercases attribute
 # names, so the bundle spells them out instead.
-CAMEL = ["onClick", "onKeyDown", "onSelect", "autoRotate", "viewBox", "autoPlay", "playsInline"]
+CAMEL = ["onClick", "onKeyDown", "onSelect", "autoRotate", "viewBox"]
 
 
 def block(src, tag):
