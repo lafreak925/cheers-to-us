@@ -31,8 +31,13 @@ none of them are obvious from reading the code:
 - **Globe seams.** Restyle the backdrop to a colour no photo contains
   (`#00ff00`), screenshot across ~10 drag rotations including both poles, and
   count green pixels inside 90% of the disc radius. Any hole in the shell shows
-  up as green. Current baseline on the 12×24 grid: **0.000%** across 16 frames.
-  If a change pushes that into tenths of a percent, the geometry regressed.
+  up as green. Current baseline on the desktop 12×24 grid: **~0.016% mean,
+  ~0.037% worst frame** across 16 rotations. It was 0.000% when `bleed` was 3px;
+  dropping it to 1.2 to keep the 2px `frame` crisp traded some of that seal back
+  for a few dozen sub-visual pinholes at the seams. If a change pushes this into
+  tenths of a percent, the geometry regressed.
+  Assert the frames actually differ — if the drag misses, every frame is
+  identical and a broken run looks like a clean one.
   Two traps when scripting this against Chrome over CDP: `Page.captureScreenshot`'s
   `clip` is in **page** coordinates while `getBoundingClientRect` is
   viewport-relative — mixing them silently shifts the measurement window by
